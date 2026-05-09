@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -43,6 +44,7 @@ public class DataInitializer implements CommandLineRunner {
 	private final RegistroMedicoRepository registroMedicoRepository;
 	private final FacturaRepository facturaRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final String seedUserPassword;
 
 	public DataInitializer(
 			UsuarioRepository usuarioRepository,
@@ -52,7 +54,8 @@ public class DataInitializer implements CommandLineRunner {
 			CitaRepository citaRepository,
 			RegistroMedicoRepository registroMedicoRepository,
 			FacturaRepository facturaRepository,
-			PasswordEncoder passwordEncoder) {
+			PasswordEncoder passwordEncoder,
+			@Value("${app.seed.user-password}") String seedUserPassword) {
 		this.usuarioRepository = usuarioRepository;
 		this.animalRepository = animalRepository;
 		this.duenoRepository = duenoRepository;
@@ -61,6 +64,7 @@ public class DataInitializer implements CommandLineRunner {
 		this.registroMedicoRepository = registroMedicoRepository;
 		this.facturaRepository = facturaRepository;
 		this.passwordEncoder = passwordEncoder;
+		this.seedUserPassword = seedUserPassword;
 	}
 
 	@Override
@@ -69,17 +73,17 @@ public class DataInitializer implements CommandLineRunner {
 		if (usuarioRepository.count() == 0) {
 			usuarioRepository.save(Usuario.builder()
 					.username("maria")
-					.password(passwordEncoder.encode("Duoc2026!"))
+					.password(passwordEncoder.encode(seedUserPassword))
 					.rol(RolUsuario.COORDINADOR)
 					.build());
 			usuarioRepository.save(Usuario.builder()
 					.username("pedro")
-					.password(passwordEncoder.encode("Duoc2026!"))
+					.password(passwordEncoder.encode(seedUserPassword))
 					.rol(RolUsuario.VETERINARIO)
 					.build());
 			usuarioRepository.save(Usuario.builder()
 					.username("luis")
-					.password(passwordEncoder.encode("Duoc2026!"))
+					.password(passwordEncoder.encode(seedUserPassword))
 					.rol(RolUsuario.GESTOR)
 					.build());
 		}

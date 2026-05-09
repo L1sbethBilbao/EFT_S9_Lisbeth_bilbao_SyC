@@ -1,9 +1,11 @@
 Usuarios de prueba (Semana 8 - Unidos por Los Animales)
-Contraseña común para los tres: Duoc2026!
+Contraseña común para los tres: definida por app.seed.user-password (por defecto Duoc2026!).
 
 - maria  / Duoc2026!  → rol COORDINADOR  (todas las APIs privadas)
 - pedro  / Duoc2026!  → rol VETERINARIO  (veterinarios, citas, registros médicos, facturas)
 - luis   / Duoc2026!  → rol GESTOR       (dueños; POST/PUT/DELETE de mascotas)
 
+Puedes cambiar la clave demo con la variable de entorno APP_SEED_USER_PASSWORD
+sin tocar código fuente Java.
 Las contraseñas se almacenan en MySQL con BCrypt. El rol está en usuarios.rol.
 El JWT incluye el claim "roles"; el body de login incluye el array JSON "roles".

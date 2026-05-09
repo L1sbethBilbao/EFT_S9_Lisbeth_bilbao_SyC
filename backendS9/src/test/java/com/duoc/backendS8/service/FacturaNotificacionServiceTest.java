@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import com.duoc.backendS8.entity.Factura;
 import com.duoc.backendS8.entity.RegistroMedico;
@@ -20,6 +21,6 @@ class FacturaNotificacionServiceTest {
 				.total(new BigDecimal("100.00"))
 				.registroMedico(rm)
 				.build();
-		svc.enviarPorCorreo(f, "cliente@ejemplo.cl");
+		assertDoesNotThrow(() -> svc.enviarPorCorreo(f, "cliente@ejemplo.cl"));
 	}
 }
