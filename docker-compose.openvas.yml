@@ -1,0 +1,19 @@
+name: eft_s9_openvas
+
+services:
+  openvas:
+    image: immauss/openvas:latest
+    container_name: eft-openvas
+    ports:
+      - "9392:9392"
+    environment:
+      PASSWORD: "admin123"
+      USERNAME: "admin"
+      RELAYHOST: ""
+      SMTPPORT: "25"
+    volumes:
+      - openvas_data:/data
+    restart: unless-stopped
+
+volumes:
+  openvas_data:

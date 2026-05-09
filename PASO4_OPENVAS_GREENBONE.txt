@@ -1,0 +1,90 @@
+================================================================================
+Paso 4 EFT — Ausencia de vulnerabilidades con OpenVAS/Greenbone + Postman
+================================================================================
+
+Objetivo
+--------
+Demostrar ausencia de fallos criticos mediante escaneo de vulnerabilidades y
+prueba de flujo de seguridad/autenticacion.
+
+--------------------------------------------------------------------------------
+1) Levantar OpenVAS/Greenbone (Docker Compose)
+--------------------------------------------------------------------------------
+
+Desde la carpeta EFT_S9_Lisbeth_bilbao_SyC:
+
+  docker compose -f docker-compose.openvas.yml up -d
+
+Interfaz web:
+  https://localhost:9392
+
+Credenciales iniciales (definidas en compose):
+  usuario: admin
+  clave:   admin123
+
+Nota: la primera inicializacion puede tardar varios minutos.
+
+--------------------------------------------------------------------------------
+2) Definir objetivos de escaneo
+--------------------------------------------------------------------------------
+
+Si backend/frontend estan ejecutandose en tu PC:
+
+  - Backend:  host.docker.internal:9080
+  - Frontend: host.docker.internal:8081
+
+Si usas otros puertos, ajusta esos valores.
+
+--------------------------------------------------------------------------------
+3) Crear y ejecutar tarea de escaneo
+--------------------------------------------------------------------------------
+
+En Greenbone:
+  1. Configuration -> Targets -> New Target
+  2. Name: backend-local
+     Hosts: host.docker.internal
+     Port list: "All TCP and Nmap top 100 UDP" (o equivalente)
+  3. Repetir para frontend-local si deseas escaneo separado
+  4. Scans -> Tasks -> New Task
+     - Name: scan-backend
+     - Target: backend-local
+     - Scan Config: Full and fast
+  5. Run Task y esperar estado "Done"
+
+Repite el flujo para frontend.
+
+--------------------------------------------------------------------------------
+4) Exportar reporte para evidencia
+--------------------------------------------------------------------------------
+
+Desde el resultado del scan:
+  - Download Report -> PDF (o HTML)
+  - Guardar en carpeta de evidencias (reportes_openvas/)
+
+Capturas recomendadas:
+  - Panel de task finalizado (Done)
+  - Severidad global (sin hallazgos criticos, si aplica)
+  - Tabla de findings
+
+--------------------------------------------------------------------------------
+5) Evidencia adicional con Postman (flujo de seguridad)
+--------------------------------------------------------------------------------
+
+Mostrar en Postman:
+  - Login correcto (obtencion de token)
+  - Acceso autorizado con token valido
+  - Rechazo sin token / token invalido (401/403)
+
+Guardar capturas de respuestas y codigos HTTP.
+
+--------------------------------------------------------------------------------
+6) Texto breve sugerido para el informe
+--------------------------------------------------------------------------------
+
+"Para el Paso 4 se implemento un escaneo de vulnerabilidades con OpenVAS/
+Greenbone ejecutado sobre contenedores Docker. Se analizaron los servicios
+backend y frontend en entorno local y se exportaron los reportes de resultados.
+Adicionalmente, mediante Postman se validaron flujos de autenticacion y control
+de acceso, verificando respuestas esperadas para escenarios autorizados y no
+autorizados."
+
