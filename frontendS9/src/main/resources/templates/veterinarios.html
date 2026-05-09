@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Veterinarios</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container catalog-page">
+	<p th:if="${mensaje}" class="flash">
+		<span th:text="${mensaje}">OK</span><br th:if="${mostrarIrCitas}"/>
+		<a th:if="${mostrarIrCitas}" class="btn primary" th:href="@{/citas/nueva}">Agendar cita</a>
+	</p>
+
+	<header class="catalog-page-head catalog-page-head--toolbar">
+		<div class="catalog-page-head-row">
+			<h1 class="catalog-page-title">Veterinarios</h1>
+			<div class="catalog-page-actions">
+				<a sec:authorize="hasRole('COORDINADOR')" class="btn primary" th:href="@{/veterinarios/nuevo}">+ Nuevo</a>
+			</div>
+		</div>
+		<p class="hint catalog-page-lead">Profesionales que atienden en la clínica. Solo coordinación puede crear, editar o dar de baja fichas de veterinario.</p>
+	</header>
+
+	<section class="catalog-section">
+		<div class="solicitud-card catalog-card catalog-card--table">
+			<div class="table-wrap">
+				<table class="data-table data-table--catalog">
+					<thead>
+					<tr>
+						<th>Nombre</th>
+						<th>Especialidad</th>
+						<th>Activo</th>
+						<th class="col-solicitud-detalle">Editar</th>
+						<th class="col-solicitud-eliminar">Eliminar</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:if="${#lists.isEmpty(veterinarios)}">
+						<td colspan="5" class="empty">No hay veterinarios registrados.</td>
+					</tr>
+					<tr th:each="v : ${veterinarios}">
+						<td th:text="${v.nombre()}"></td>
+						<td th:text="${v.especialidad() != null ? v.especialidad() : '—'}"></td>
+						<td>
+							<span th:if="${v.activo()}" class="catalog-badge-si-no catalog-badge-si-no--si">Sí</span>
+							<span th:unless="${v.activo()}" class="catalog-badge-si-no catalog-badge-si-no--no">No</span>
+						</td>
+						<td class="col-solicitud-detalle-cell">
+							<th:block sec:authorize="hasRole('COORDINADOR')">
+								<a class="btn btn-sm btn-solicitud-ver catalog-ficha-btn"
+								   th:href="@{/veterinarios/{id}/editar(id=${v.id()})}">Editar</a>
+							</th:block>
+							<span sec:authorize="!hasRole('COORDINADOR')" class="muted">—</span>
+						</td>
+						<td class="col-solicitud-eliminar-cell">
+							<th:block sec:authorize="hasRole('COORDINADOR')">
+								<form th:action="@{/veterinarios/{id}/eliminar(id=${v.id()})}" method="post" class="solicitud-eliminar-form">
+									<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+									<button type="submit" class="btn danger btn-sm">Eliminar</button>
+								</form>
+							</th:block>
+							<span sec:authorize="!hasRole('COORDINADOR')" class="muted">—</span>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+</main>
+</body>
+</html>

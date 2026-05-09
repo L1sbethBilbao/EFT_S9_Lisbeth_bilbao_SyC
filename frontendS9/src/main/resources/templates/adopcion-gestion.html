@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Solicitudes de adopción</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container catalog-page">
+	<p th:if="${mensaje}" class="flash" th:text="${mensaje}"></p>
+	<p th:if="${backendError}" class="alert" th:text="${backendError}"></p>
+
+	<header class="catalog-page-head">
+		<h1 class="catalog-page-title">Solicitudes de adopción</h1>
+		<p class="hint catalog-page-lead">Revise cada postulación, actualice el estado y mantenga el hilo de mensajes con el solicitante. Al aprobar, el adoptante se registra como dueño y la mascota pasa a adoptada.</p>
+	</header>
+
+	<section class="catalog-section">
+		<div class="solicitud-card catalog-card catalog-card--table">
+			<div class="table-wrap">
+				<table class="data-table data-table--catalog">
+				<thead>
+				<tr>
+					<th>Id</th>
+					<th>Código</th>
+					<th>Mascota</th>
+					<th>Solicitante</th>
+					<th>Email</th>
+					<th>Estado</th>
+					<th>Fecha</th>
+					<th class="col-solicitud-detalle">Detalle</th>
+					<th class="col-solicitud-eliminar">Eliminar</th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr th:if="${#lists.isEmpty(solicitudes)}">
+					<td colspan="9" class="empty">No hay solicitudes.</td>
+				</tr>
+				<tr th:each="s : ${solicitudes}">
+					<td th:text="${s.id()}">—</td>
+					<td th:text="${#strings.abbreviate(s.codigoSeguimiento(), 12)}">—</td>
+					<td th:text="${s.animalNombre()}">—</td>
+					<td th:text="${s.nombreSolicitante()}">—</td>
+					<td th:text="${s.email()}">—</td>
+					<td>
+						<th:block th:switch="${s.estado()}">
+							<span th:case="'PENDIENTE'" class="catalog-solicitud-estado catalog-solicitud-estado--pendiente">Pendiente</span>
+							<span th:case="'EN_REVISION'" class="catalog-solicitud-estado catalog-solicitud-estado--revision">En revisión</span>
+							<span th:case="'APROBADA'" class="catalog-solicitud-estado catalog-solicitud-estado--aprobada">Aprobada</span>
+							<span th:case="'RECHAZADA'" class="catalog-solicitud-estado catalog-solicitud-estado--rechazada">Rechazada</span>
+							<span th:case="*" class="catalog-solicitud-estado catalog-solicitud-estado--unknown" th:text="${s.estado() != null ? s.estado() : '—'}">—</span>
+						</th:block>
+					</td>
+					<td th:text="${s.createdAt() != null ? #temporals.format(s.createdAt(), 'yyyy-MM-dd HH:mm') : '—'}">—</td>
+					<td class="col-solicitud-detalle-cell">
+						<a class="btn btn-sm btn-solicitud-ver catalog-ficha-btn"
+						   th:href="@{/adopciones/gestion/{id}(id=${s.id()})}"
+						   title="Abrir solicitud: datos, estado y mensajes con el solicitante">Ver</a>
+					</td>
+					<td class="col-solicitud-eliminar-cell">
+						<form method="post" th:action="@{/adopciones/gestion/{id}/eliminar(id=${s.id()})}"
+						      class="solicitud-eliminar-form"
+						      onsubmit="return confirm('¿Está segura de que desea eliminar esta solicitud de adopción? Esta acción no se puede deshacer.');">
+							<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+							<button type="submit" class="btn danger btn-sm">Eliminar solicitud</button>
+						</form>
+					</td>
+				</tr>
+				</tbody>
+			</table>
+			</div>
+		</div>
+	</section>
+</main>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Facturas</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container catalog-page">
+	<p th:if="${mensaje}" class="flash" th:text="${mensaje}"></p>
+
+	<header class="catalog-page-head">
+		<h1 class="catalog-page-title">Facturas</h1>
+		<p class="hint catalog-page-lead">Documentos emitidos por atenciones clínica. Use Ver para abrir el detalle, imprimir o enviar copia por correo (demo).</p>
+	</header>
+
+	<section class="catalog-section">
+		<div class="solicitud-card catalog-card catalog-card--table">
+			<div class="table-wrap">
+				<table class="data-table data-table--catalog">
+					<thead>
+					<tr>
+						<th>Número</th>
+						<th>Fecha</th>
+						<th>Mascota</th>
+						<th>Total</th>
+						<th class="col-solicitud-detalle">Detalle</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:if="${#lists.isEmpty(facturas)}">
+						<td colspan="5" class="empty">No hay facturas registradas.</td>
+					</tr>
+					<tr th:each="f : ${facturas}">
+						<td th:text="${f.numeroFactura()}"></td>
+						<td th:text="${f.fechaEmision()}"></td>
+						<td th:text="${f.animalNombre()}"></td>
+						<td th:text="${f.total()}"></td>
+						<td class="col-solicitud-detalle-cell">
+							<a class="btn btn-sm btn-solicitud-ver catalog-ficha-btn" th:href="@{/facturas/{id}(id=${f.id()})}">Ver</a>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+</main>
+</body>
+</html>

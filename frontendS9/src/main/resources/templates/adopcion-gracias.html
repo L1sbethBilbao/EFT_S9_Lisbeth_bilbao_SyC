@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Solicitud registrada</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container narrow">
+	<section class="panel" th:if="${adopcionCreada != null}">
+		<h1>Solicitud registrada</h1>
+		<p th:text="${adopcionCreada.mensaje()}">—</p>
+		<p>Su código de seguimiento es:</p>
+		<p class="flash codigo-seguimiento-display" th:text="${adopcionCreada.codigoSeguimiento()}">—</p>
+		<p class="hint">Guarde este código. En <a th:href="@{/adopciones/seguimiento(codigo=${adopcionCreada.codigoSeguimiento()})}">Seguimiento</a> podrá ver el estado de la solicitud, las respuestas de coordinación y enviar mensajes.</p>
+		<p><a class="btn primary" th:href="@{/adopciones/seguimiento(codigo=${adopcionCreada.codigoSeguimiento()})}">Ir a seguimiento</a>
+			<a class="btn ghost" th:href="@{/adopciones/disponibles}">Ver más mascotas</a></p>
+	</section>
+</main>
+</body>
+</html>

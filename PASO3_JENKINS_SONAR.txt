@@ -1,0 +1,111 @@
+================================================================================
+Paso 3 EFT — Jenkins + SonarQube (análisis estático)
+================================================================================
+
+Qué NO toca este paso
+---------------------
+• El archivo docker-compose.yml de la aplicación (MySQL, backend 9080, front 8081).
+• Spring Security, cabeceras HTTP, cookies ni ninguna configuración revisada con ZAP.
+• Solo se añaden: compose de CI, Dockerfile de Jenkins, Jenkinsfile, plugin Sonar en pom.xml.
+
+Qué sí hace
+-----------
+• Sube SonarQube y Jenkins en contenedores aparte (puertos 9000 y 8090).
+• Permite evidencia: capturas / PDF del dashboard de Sonar y del job en Jenkins.
+
+--------------------------------------------------------------------------------
+1) Arrancar SonarQube + Jenkins
+--------------------------------------------------------------------------------
+
+Desde la carpeta EFT_S9_Lisbeth_bilbao_SyC:
+
+  docker compose -f docker-compose.sonar-jenkins.yml up -d --build
+
+Espera ~1–2 minutos a que SonarQube termine de iniciar.
+
+• SonarQube: http://localhost:9000
+• Jenkins:    http://localhost:8090
+
+Si Sonar no arranca en Linux/WSL y el log menciona vm.max_map_count:
+
+  sudo sysctl -w vm.max_map_count=524288
+
+--------------------------------------------------------------------------------
+2) Primera vez en SonarQube
+--------------------------------------------------------------------------------
+
+• Usuario/contraseña por defecto: admin / admin (te pedirá cambiar la clave).
+• My Account → Security → Generate Token (guárdalo; es el que usarás como SONAR_TOKEN).
+• Los proyectos se crean automáticamente al primer análisis con las claves:
+    - eft-backend-s9
+    - eft-frontend-s9
+  (definidas en backendS9/pom.xml y frontendS9/pom.xml).
+
+Para la evidencia de “ausencia de hallazgos críticos”: en el proyecto, revisa
+Reliability / Security / Maintainability y el filtro por severidad (BLOCKER / CRITICAL).
+
+--------------------------------------------------------------------------------
+3) Primera vez en Jenkins
+--------------------------------------------------------------------------------
+
+• Obtén la contraseña inicial:
+
+    docker logs eft-jenkins 2>&1 | findstr /i "password"
+
+  (En PowerShell también puedes ver el log completo y buscar "password".)
+
+• Asistente: instala plugins sugeridos, crea usuario admin.
+• Manage Jenkins → Credentials → (global) → Add Secret text
+      ID: sonar-token
+      Secret: <pega el token de SonarQube>
+
+--------------------------------------------------------------------------------
+4) Job en Jenkins (opción A — Pipeline con el Jenkinsfile del repo)
+--------------------------------------------------------------------------------
+
+• New Item → Pipeline → nombre: eft-sonar-analysis
+• Pipeline → Definition: Pipeline script from SCM (o “Pipeline script” pegando el Jenkinsfile).
+• Si usas SCM, apunta a tu repositorio; si trabajas solo local, usa opción B.
+
+--------------------------------------------------------------------------------
+5) Job en Jenkins (opción B — Freestyle, rápido para laboratorio)
+--------------------------------------------------------------------------------
+
+• New Item → Freestyle project
+• Build → Execute shell (mismo criterio que el Jenkinsfile: sin “clean” en Windows;
+  frontend compila target en /tmp para evitar “Operation not permitted” en OneDrive):
+
+cd /workspace/backendS9
+mvn verify sonar:sonar \
+  -Dsonar.host.url=http://sonarqube:9000 \
+  -Dsonar.token=TU_TOKEN_AQUI
+
+rm -rf /tmp/maven-build/frontendS9
+cd /workspace/frontendS9
+mvn verify sonar:sonar \
+  -Dproject.build.directory=/tmp/maven-build/frontendS9/target \
+  -Dsonar.host.url=http://sonarqube:9000 \
+  -Dsonar.token=TU_TOKEN_AQUI
+
+(Sustituye TU_TOKEN_AQUI o usa credencial en “Bindings” → Secret text.)
+
+--------------------------------------------------------------------------------
+6) Opción sin Jenkins (solo SonarQube + Maven en tu PC)
+--------------------------------------------------------------------------------
+
+Con SonarQube en marcha (localhost:9000), desde backendS9 o frontendS9:
+
+  mvn clean verify sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.token=TU_TOKEN
+
+La consigna pide Jenkins y SonarQube; esta opción sirve para probar, pero entrega
+también capturas del job de Jenkins para cumplir el requisito.
+
+--------------------------------------------------------------------------------
+7) Evidencias para el informe PDF
+--------------------------------------------------------------------------------
+
+• Pantalla del overview de cada proyecto en Sonar (sin issues críticos / quality gate).
+• Pantalla del build exitoso en Jenkins.
+• Opcional: Sonar permite imprimir / guardar informes desde la UI según versión.
+
+================================================================================

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Dueño</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container catalog-page gestion-form-page">
+	<header class="catalog-page-head">
+		<h1 class="catalog-page-title" th:text="${modo} == 'crear' ? 'Nuevo dueño' : 'Editar dueño'">Dueño</h1>
+		<p class="hint catalog-page-lead">Complete nombre y datos de contacto del tutor. Podrá asociar mascotas a este dueño desde la ficha del animal.</p>
+	</header>
+	<section class="catalog-section">
+		<div class="solicitud-card catalog-card">
+			<form th:if="${modo} == 'crear'" th:action="@{/duenos}" method="post" th:object="${duenoForm}" class="stack-form">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+				<label><span>Nombre completo *</span><input type="text" th:field="*{nombreCompleto}" required/></label>
+				<label><span>Email</span><input type="email" th:field="*{email}"/></label>
+				<label><span>Teléfono</span><input type="text" th:field="*{telefono}"/></label>
+				<label><span>Dirección</span><input type="text" th:field="*{direccion}"/></label>
+				<div class="form-actions"><button type="submit" class="btn primary">Guardar</button><a class="btn ghost" th:href="@{/duenos}">Volver</a></div>
+			</form>
+			<form th:if="${modo} == 'editar'" th:action="@{/duenos/{id}/actualizar(id=${duenoId})}" method="post" th:object="${duenoForm}" class="stack-form">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+				<label><span>Nombre completo *</span><input type="text" th:field="*{nombreCompleto}" required/></label>
+				<label><span>Email</span><input type="email" th:field="*{email}"/></label>
+				<label><span>Teléfono</span><input type="text" th:field="*{telefono}"/></label>
+				<label><span>Dirección</span><input type="text" th:field="*{direccion}"/></label>
+				<div class="form-actions"><button type="submit" class="btn primary">Actualizar</button><a class="btn ghost" th:href="@{/duenos}">Volver</a></div>
+			</form>
+		</div>
+	</section>
+</main>
+</body>
+</html>

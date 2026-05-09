@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Seguimiento adopción</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container seguimiento-page">
+	<p th:if="${mensajeOk}" class="flash" th:text="${mensajeOk}"></p>
+	<p th:if="${seguimientoCerradoInfo}" class="flash" th:text="${seguimientoCerradoInfo}"></p>
+	<p th:if="${errorApi}" class="alert" th:text="${errorApi}"></p>
+	<p th:if="${consultaError}" class="alert" th:text="${consultaError}"></p>
+
+	<header class="seguimiento-page-head" th:classappend="${vista != null ? 'seguimiento-page-head--with-action' : ''}">
+		<div class="seguimiento-page-head-text">
+			<h1 class="seguimiento-page-title">Seguimiento de adopción</h1>
+			<p class="hint seguimiento-page-lead">Use el código que recibió al enviar la solicitud para ver el estado y el historial con coordinación, o para enviar un mensaje.</p>
+		</div>
+		<div class="seguimiento-page-head-actions" th:if="${vista != null}">
+			<a class="btn ghost" th:href="@{/adopciones/seguimiento/salir}">Cerrar seguimiento</a>
+			<p class="hint seguimiento-salir-hint">Oculta el detalle en este navegador. Su solicitud sigue activa: mañana puede volver a consultar con el mismo código.</p>
+		</div>
+	</header>
+
+	<section class="seguimiento-section">
+		<h2 class="adopcion-col-section-title">Consultar estado</h2>
+		<div class="solicitud-card seguimiento-card">
+			<p class="sidebar-card-hint">Ingrese el código y pulse <strong>Ver estado</strong> para ver la mascota, el estado actual y la conversación.</p>
+			<form method="get" th:action="@{/adopciones/seguimiento}" class="seguimiento-consulta-row">
+				<label class="seguimiento-consulta-field">
+					<span>Código de seguimiento</span>
+					<input type="text" name="codigo" maxlength="40" autocomplete="off"
+					       th:value="${vista != null} ? ${vista.codigoSeguimiento()} : ${param.codigo}"
+					       placeholder="Pegue o escriba el código"/>
+				</label>
+				<button type="submit" class="btn primary seguimiento-consulta-btn">Ver estado</button>
+			</form>
+		</div>
+	</section>
+
+	<th:block th:if="${vista != null}">
+		<section class="seguimiento-section">
+			<h2 class="adopcion-col-section-title">Resumen de la solicitud</h2>
+			<div class="solicitud-card seguimiento-card seguimiento-card--resumen">
+				<dl class="detail-list detail-list--compact">
+					<dt>Mascota</dt>
+					<dd th:text="${vista.animalNombre()}">—</dd>
+					<dt>Estado</dt>
+					<dd><span class="solicitud-estado-pill" th:text="${vista.estado()}">—</span></dd>
+				</dl>
+				<p class="seguimiento-estado-desc hint" th:text="${vista.estadoDescripcion()}">—</p>
+			</div>
+		</section>
+
+		<section class="seguimiento-section">
+			<h2 class="adopcion-col-section-title">Mensajes con coordinación</h2>
+			<div class="solicitud-card seguimiento-card">
+				<p class="sidebar-card-hint" th:if="${vista.mensajes() == null or vista.mensajes().isEmpty()}">
+					Aún no hay mensajes. Use el formulario de abajo para contactar al equipo.</p>
+				<div class="msg-thread msg-thread--seguimiento"
+				     th:if="${vista.mensajes() != null and !vista.mensajes().isEmpty()}">
+					<div th:each="m : ${vista.mensajes()}"
+					     class="msg-bubble"
+					     th:classappend="${m.rolAutor() == 'COORDINADOR'} ? ' msg-coordinador' : ' msg-solicitante'">
+						<div class="msg-meta">
+							<span th:text="${m.rolAutor() == 'COORDINADOR'} ? 'Coordinación' : 'Usted'">—</span>
+							<span th:if="${m.createdAt() != null}" th:text="${#temporals.format(m.createdAt(), 'dd/MM/yyyy HH:mm')}"></span>
+						</div>
+						<pre class="msg-pre" th:text="${m.cuerpo()}">—</pre>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="seguimiento-section">
+			<h2 class="adopcion-col-section-title">Enviar un mensaje</h2>
+			<div class="solicitud-card seguimiento-card seguimiento-card--mensaje">
+				<p class="sidebar-card-hint">Escriba consultas o información adicional; la coordinadora podrá responder aquí.</p>
+				<form method="post" th:action="@{/adopciones/seguimiento/mensaje}" th:object="${seguimientoForm}" class="stack-form stack-form--seguimiento">
+					<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+					<label><span>Código de seguimiento *</span>
+						<input type="text" th:field="*{codigoSeguimiento}" required maxlength="40" autocomplete="off"
+						       th:readonly="${vista != null}"
+						       placeholder="Código recibido al finalizar el formulario"/></label>
+					<label><span>Mensaje *</span>
+						<textarea th:field="*{cuerpo}" rows="6" maxlength="4000" required
+						          placeholder="Su mensaje para coordinación."></textarea></label>
+					<div class="form-actions form-actions--seguimiento">
+						<button type="submit" class="btn primary">Enviar mensaje</button>
+						<a class="btn ghost" th:href="@{/adopciones/seguimiento/salir}">Cerrar seguimiento</a>
+						<a class="btn ghost" th:href="@{/adopciones/disponibles}">Mascotas disponibles</a>
+					</div>
+				</form>
+			</div>
+		</section>
+	</th:block>
+
+	<section class="seguimiento-section" th:if="${vista == null}">
+		<h2 class="adopcion-col-section-title">Enviar mensaje con su código</h2>
+		<div class="solicitud-card seguimiento-card seguimiento-card--mensaje">
+			<p class="sidebar-card-hint">Puede enviar un mensaje solo con el código, sin consultar antes el estado (o usar <strong>Consultar estado</strong> arriba).</p>
+			<form method="post" th:action="@{/adopciones/seguimiento/mensaje}" th:object="${seguimientoForm}" class="stack-form stack-form--seguimiento">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+				<label><span>Código de seguimiento *</span>
+					<input type="text" th:field="*{codigoSeguimiento}" required maxlength="40" autocomplete="off"
+					       placeholder="Ej. UUID recibido al finalizar el formulario"/></label>
+				<label><span>Mensaje *</span>
+					<textarea th:field="*{cuerpo}" rows="6" maxlength="4000" required
+					          placeholder="Consultas o información adicional para los coordinadores."></textarea></label>
+				<div class="form-actions form-actions--seguimiento">
+					<button type="submit" class="btn primary">Enviar mensaje</button>
+					<a class="btn ghost" th:href="@{/adopciones/disponibles}">Mascotas disponibles</a>
+				</div>
+			</form>
+		</div>
+	</section>
+</main>
+</body>
+</html>

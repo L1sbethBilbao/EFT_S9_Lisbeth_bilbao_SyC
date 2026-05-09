@@ -1,0 +1,78 @@
+# Todo el stack: MySQL + backend + frontend.
+# Arranque: docker compose up -d --build
+#
+# En tu PC (sin variables ni pasos extra):
+#   Interfaz web: http://localhost:8081
+#   API:          http://localhost:9080   ← puerto distinto al 8080 del PC para evitar choques con Maven/IDE
+# Dentro de Docker el backend sigue en 8080; el front habla con http://backend:8080 (red interna).
+#
+# Sin Docker: mvn en backendS9 (8080) y frontendS9 (8081); MySQL con este compose o local.
+#
+# Nombre del proyecto en Docker Desktop
+name: eft_s9_lisbeth_bilbao_syc
+
+services:
+  mysql:
+    build:
+      context: .
+      dockerfile: Dockerfile.mysql
+    container_name: unidos-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: unidos_animales
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 15s
+
+  backend:
+    build:
+      context: ./backendS9
+      dockerfile: Dockerfile
+    container_name: unidos-backend
+    ports:
+      - "9080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/unidos_animales?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_DATASOURCE_PASSWORD: app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 50s
+
+  frontend:
+    build:
+      context: ./frontendS9
+      dockerfile: Dockerfile
+    container_name: unidos-frontend
+    ports:
+      - "8081:8081"
+    environment:
+      APP_BACKEND_BASE_URL: http://backend:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8081/"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 40s
+
+volumes:
+  mysql_data:
+    name: unidos_animales_mysql_data

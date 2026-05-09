@@ -1,0 +1,8 @@
+
+
+
+comando para correr la api backend
+mvn spring-boot:run 
+
+comando para correr la web frontend
+mvn spring-boot:run 

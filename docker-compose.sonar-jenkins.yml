@@ -1,0 +1,53 @@
+# Paso 3 EFT: análisis estático con SonarQube + Jenkins (CI local).
+# NO modifica el compose de la aplicación (mysql/backend/frontend) ni el escenario ZAP.
+#
+# Arranque:
+#   docker compose -f docker-compose.sonar-jenkins.yml up -d
+#
+# URLs típicas:
+#   SonarQube  http://localhost:9000   (usuario/contraseña inicial: admin / admin → pedirá cambio)
+#   Jenkins    http://localhost:8090
+#
+# Red interna: el contenedor Jenkins puede usar http://sonarqube:9000 al enviar el análisis.
+
+name: eft_s9_ci_sonar_jenkins
+
+services:
+  sonarqube:
+    image: sonarqube:community
+    container_name: eft-sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - eft-ci
+
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins-ci
+    container_name: eft-jenkins
+    ports:
+      - "8090:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # Proyecto montado con escritura: Maven necesita borrar/crear target/ en clean verify.
+      - ./:/workspace
+    networks:
+      - eft-ci
+
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  jenkins_home:
+
+networks:
+  eft-ci:
+    driver: bridge

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Nueva ficha</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container catalog-page gestion-form-page">
+	<header class="catalog-page-head">
+		<h1 class="catalog-page-title">Registrar atención médica</h1>
+		<p class="hint catalog-page-lead" th:if="${fechaHoraCita != null}">
+			Fecha y hora cargadas desde la cita; ajústelas solo si la atención fue en otro momento.
+		</p>
+		<p class="hint catalog-page-lead" th:if="${fechaHoraCita == null}">
+			Complete el registro clínico tras la atención. Esta ficha quedará asociada a la cita indicada.
+		</p>
+	</header>
+	<section class="catalog-section">
+		<div class="solicitud-card catalog-card">
+			<form th:action="@{/registros-medicos}" method="post" th:object="${registroForm}" class="stack-form">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+				<input type="hidden" th:field="*{citaId}"/>
+				<label for="fecha">Fecha *</label>
+				<input type="date" id="fecha" name="fecha" required
+					th:value="${fechaHoraCita != null ? #temporals.format(fechaHoraCita, 'yyyy-MM-dd') : ''}"/>
+				<label>Hora *<input type="time" th:field="*{hora}" required/></label>
+				<label>Diagnóstico *<textarea th:field="*{diagnostico}" rows="3" required></textarea></label>
+				<label>Tratamiento<textarea th:field="*{tratamiento}" rows="2"></textarea></label>
+				<label>Medicamentos<textarea th:field="*{medicamentos}" rows="2"></textarea></label>
+				<label>Notas<textarea th:field="*{notas}" rows="2"></textarea></label>
+				<div class="form-actions"><button type="submit" class="btn primary">Guardar ficha</button><a class="btn ghost" th:href="@{/citas}">Volver</a></div>
+			</form>
+		</div>
+	</section>
+</main>
+</body>
+</html>

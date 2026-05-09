@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Ficha mascota</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container catalog-page mascota-detalle-page">
+	<p th:if="${backendError}" class="alert" th:text="${backendError}"></p>
+	<section th:if="${mascota != null}">
+		<header class="catalog-page-head">
+			<h1 class="catalog-page-title" th:text="${mascota.nombre()}">Nombre</h1>
+			<p class="hint catalog-page-lead">Datos de la mascota tal como figuran en el catálogo de la fundación. Si está disponible para adopción, puede enviar una solicitud desde aquí.</p>
+		</header>
+		<div class="catalog-section">
+			<div class="solicitud-card catalog-card">
+				<img th:if="${mascota.fotoUrl() != null}" th:src="${mascota.fotoUrl()}" alt="" class="detail-photo"/>
+				<dl class="detail-list">
+					<dt>Especie</dt><dd th:text="${mascota.especie()}">—</dd>
+					<dt>Raza</dt><dd th:text="${mascota.raza() != null ? mascota.raza() : '—'}">—</dd>
+					<dt>Edad</dt><dd th:text="${mascota.edad()}">—</dd>
+					<dt>Ubicación</dt><dd th:text="${mascota.ubicacion() != null ? mascota.ubicacion() : '—'}">—</dd>
+					<dt>Género</dt><dd th:text="${mascota.genero() != null ? mascota.genero() : '—'}">—</dd>
+					<dt>Estado adopción</dt>
+					<dd>
+						<th:block th:switch="${mascota.estadoAdopcion()}">
+							<span th:case="'DISPONIBLE'" class="catalog-adopcion-badge catalog-adopcion-badge--disponible">Disponible</span>
+							<span th:case="'EN_ACOGIDA'" class="catalog-adopcion-badge catalog-adopcion-badge--acogida">En acogida</span>
+							<span th:case="'ADOPTADO'" class="catalog-adopcion-badge catalog-adopcion-badge--adoptado">Adoptado</span>
+							<span th:case="'NO_APLICA_CLINICA'" class="catalog-adopcion-badge catalog-adopcion-badge--clinica">No aplica</span>
+							<span th:case="*" class="catalog-adopcion-badge catalog-adopcion-badge--unknown" th:text="${mascota.estadoAdopcion() != null ? mascota.estadoAdopcion() : '—'}">—</span>
+						</th:block>
+					</dd>
+					<dt>Dueño / tutor</dt><dd th:text="${mascota.duenoNombre() != null ? mascota.duenoNombre() : '—'}">—</dd>
+				</dl>
+				<p th:if="${mascota.estadoAdopcion() == 'DISPONIBLE' or mascota.estadoAdopcion() == 'EN_ACOGIDA'}">
+					<a class="btn primary" th:href="@{/adopciones/solicitar(animalId=${mascota.id()})}">Solicitar adopción</a>
+				</p>
+				<p class="mascota-detalle-actions">
+					<a class="btn ghost" th:href="@{/}">← Volver al catálogo</a>
+					<a class="btn ghost" th:href="@{/adopciones/disponibles}">Ver disponibles</a>
+				</p>
+			</div>
+		</div>
+	</section>
+</main>
+</body>
+</html>

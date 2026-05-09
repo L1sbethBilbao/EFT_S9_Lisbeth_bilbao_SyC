@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Mascota</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container narrow">
+	<section class="panel">
+		<h1 th:text="${modo} == 'crear' ? 'Registrar mascota' : 'Editar mascota'">Mascota</h1>
+
+		<form th:if="${modo} == 'crear'" th:action="@{/animales}" method="post" th:object="${animalForm}" class="stack-form">
+			<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+			<label><span>Nombre <abbr title="obligatorio">*</abbr></span><input type="text" th:field="*{nombre}" required/></label>
+			<p class="field-error" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></p>
+			<label><span>Especie (tipo de animal)</span><input type="text" th:field="*{especie}" placeholder="Ej. Perro" title="Tipo de animal"/></label>
+			<label><span>Raza (variedad)</span><input type="text" th:field="*{raza}" placeholder="Ej. Poodle, Mestizo" title="Variedad dentro de la especie"/></label>
+			<label><span>Edad (años) <abbr title="obligatorio">*</abbr></span><input type="number" min="0" th:field="*{edad}" required/></label>
+			<p class="field-error" th:if="${#fields.hasErrors('edad')}" th:errors="*{edad}"></p>
+			<label><span>Ubicación</span><input type="text" th:field="*{ubicacion}"/></label>
+			<label>Género
+				<select th:field="*{genero}"><option value="">—</option>
+					<option value="MASCULINO">Masculino</option><option value="FEMENINO">Femenino</option><option value="DESCONOCIDO">Desconocido</option>
+				</select>
+			</label>
+			<label>Estado adopción
+				<select th:field="*{estadoAdopcion}"><option value="">—</option>
+					<option value="DISPONIBLE">Disponible</option><option value="EN_ACOGIDA">En acogida</option>
+					<option value="ADOPTADO">Adoptado</option><option value="NO_APLICA_CLINICA">No aplica (clínica)</option>
+				</select>
+			</label>
+			<label><span>URL foto</span><input type="url" th:field="*{fotoUrl}"/></label>
+			<label>Dueño / tutor
+				<select th:field="*{duenoId}"><option value="">— Sin asignar —</option>
+					<option th:each="d : ${duenos}" th:value="${d.id()}" th:text="${d.nombreCompleto()}"></option>
+				</select>
+			</label>
+			<div class="form-actions"><button type="submit" class="btn primary">Guardar</button><a class="btn ghost" th:href="@{/}">Cancelar</a></div>
+		</form>
+
+		<form th:if="${modo} == 'editar'" th:action="@{/animales/{id}/actualizar(id=${animalId})}" method="post" th:object="${animalForm}" class="stack-form">
+			<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+			<label><span>Nombre <abbr title="obligatorio">*</abbr></span><input type="text" th:field="*{nombre}" required/></label>
+			<label><span>Especie (tipo de animal)</span><input type="text" th:field="*{especie}" placeholder="Ej. Perro" title="Tipo de animal"/></label>
+			<label><span>Raza (variedad)</span><input type="text" th:field="*{raza}" placeholder="Ej. Poodle, Mestizo" title="Variedad dentro de la especie"/></label>
+			<label><span>Edad (años) <abbr title="obligatorio">*</abbr></span><input type="number" min="0" th:field="*{edad}" required/></label>
+			<label><span>Ubicación</span><input type="text" th:field="*{ubicacion}"/></label>
+			<label>Género
+				<select th:field="*{genero}"><option value="">—</option>
+					<option value="MASCULINO">Masculino</option><option value="FEMENINO">Femenino</option><option value="DESCONOCIDO">Desconocido</option>
+				</select>
+			</label>
+			<label>Estado adopción
+				<select th:field="*{estadoAdopcion}"><option value="">—</option>
+					<option value="DISPONIBLE">Disponible</option><option value="EN_ACOGIDA">En acogida</option>
+					<option value="ADOPTADO">Adoptado</option><option value="NO_APLICA_CLINICA">No aplica (clínica)</option>
+				</select>
+			</label>
+			<label><span>URL foto</span><input type="url" th:field="*{fotoUrl}"/></label>
+			<label>Dueño / tutor
+				<select th:field="*{duenoId}"><option value="">— Sin asignar —</option>
+					<option th:each="d : ${duenos}" th:value="${d.id()}" th:text="${d.nombreCompleto()}"></option>
+				</select>
+			</label>
+			<div class="form-actions"><button type="submit" class="btn primary">Actualizar</button><a class="btn ghost" th:href="@{/}">Cancelar</a></div>
+		</form>
+	</section>
+</main>
+</body>
+</html>

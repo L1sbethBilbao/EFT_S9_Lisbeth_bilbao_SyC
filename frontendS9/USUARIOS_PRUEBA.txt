@@ -1,0 +1,7 @@
+Usuarios de prueba (misma clave para todos: Duoc2026!)
+
+- maria   → COORDINADOR  (menú y permisos completos)
+- pedro   → VETERINARIO  (Veterinarios, Citas, Fichas, Facturas)
+- luis    → GESTOR       (Dueños; Agregar/Editar/Eliminar mascotas)
+
+El login del API devuelve "roles"; Spring Security del frontend usa esos roles en pantalla.

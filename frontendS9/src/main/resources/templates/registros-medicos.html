@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Fichas médicas</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container catalog-page">
+	<p th:if="${mensaje}" class="flash" th:text="${mensaje}"></p>
+
+	<header class="catalog-page-head">
+		<h1 class="catalog-page-title">Fichas de atención</h1>
+		<p class="hint catalog-page-lead">Registros clínicos generados desde las citas atendidas. Si una atención aún no tiene factura, puede emitirla desde esta lista.</p>
+	</header>
+
+	<section class="catalog-section">
+		<div class="solicitud-card catalog-card catalog-card--table">
+			<div class="table-wrap">
+				<table class="data-table data-table--catalog">
+					<thead>
+					<tr>
+						<th>ID</th>
+						<th>Cita</th>
+						<th>Diagnóstico</th>
+						<th>Factura</th>
+						<th class="col-solicitud-detalle">Facturación</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:if="${#lists.isEmpty(registros)}">
+						<td colspan="5" class="empty">No hay fichas de atención registradas.</td>
+					</tr>
+					<tr th:each="r : ${registros}">
+						<td th:text="${r.id()}"></td>
+						<td th:text="${r.citaId()}"></td>
+						<td th:text="${#strings.abbreviate(r.diagnostico(), 40)}"></td>
+						<td th:text="${r.facturaId() != null ? r.facturaId() : '—'}"></td>
+						<td class="col-solicitud-detalle-cell">
+							<a th:if="${r.facturaId() == null}"
+							   class="btn btn-sm btn-solicitud-ver catalog-ficha-btn"
+							   th:href="@{/facturas/nueva(registroMedicoId=${r.id()})}">Emitir factura</a>
+							<span th:if="${r.facturaId() != null}" class="muted">—</span>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+</main>
+</body>
+</html>

@@ -1,0 +1,32 @@
+Proyecto Semana 9 — Unidos por Los Animales (backendS9 + frontendS9)
+
+Cobertura JaCoCo (mínimo 80 % líneas según instrucciones S9, fase verify):
+  cd backendS9
+  mvnw.cmd verify
+  Informe HTML: backendS9\target\site\jacoco\index.html
+
+  cd frontendS9
+  mvnw.cmd verify
+  Informe HTML: frontendS9\target\site\jacoco\index.html
+
+Solo pruebas (sin regla de cobertura en verify):
+  mvnw.cmd test
+
+OWASP Dependency-Check está en skip=true por defecto en los pom.
+Para ejecutarlo: mvnw.cmd verify -Dowasp.dependency-check.skip=false
+(Requiere tiempo y opcionalmente variable de entorno NVD_API_KEY.)
+
+MySQL con Docker (desde esta carpeta):
+  docker build -f Dockerfile.mysql -t unidos-animales-mysql .
+  docker run --name unidos-mysql -p 3306:3306 -d unidos-animales-mysql
+
+Subir a GitHub (repositorio vacío):
+  cd EFT_S9_Lisbeth_bilbao_SyC
+  git init
+  git add .
+  git commit -m "Entrega semana 9: backendS9, frontendS9, JaCoCo, pruebas"
+  git branch -M main
+  git remote add origin https://github.com/L1sbethBilbao/EFT_S9_Lisbeth_bilbao_SyC.git
+  git push -u origin main
+
+Puertos: backend 8080, frontend 8081 (application.properties).

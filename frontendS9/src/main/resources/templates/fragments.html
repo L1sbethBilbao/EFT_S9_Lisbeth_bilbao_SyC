@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<header class="site-header" th:fragment="header">
+	<div class="brand">
+		<span class="brand-mark">&#9829;</span>
+		<span>Unidos por Los Animales</span>
+	</div>
+	<nav class="nav-links">
+		<th:block sec:authorize="!isAuthenticated()">
+			<a th:href="@{/}">Inicio</a>
+			<a th:href="@{/adopciones/disponibles}">Adopciones</a>
+			<a th:href="@{/adopciones/seguimiento}">Seguimiento</a>
+		</th:block>
+		<th:block sec:authorize="hasRole('COORDINADOR')">
+			<a th:href="@{/adopciones/gestion}">Solicitudes adopción</a>
+		</th:block>
+		<th:block sec:authorize="hasAnyRole('COORDINADOR','GESTOR')">
+			<a th:href="@{/duenos}">Dueños</a>
+		</th:block>
+		<th:block sec:authorize="hasAnyRole('COORDINADOR','VETERINARIO')">
+			<a th:href="@{/veterinarios}">Veterinarios</a>
+			<a th:href="@{/citas}">Citas</a>
+			<a th:href="@{/registros-medicos}">Fichas</a>
+			<a th:href="@{/facturas}">Facturas</a>
+		</th:block>
+		<th:block sec:authorize="isAuthenticated()">
+			<form th:action="@{/logout}" method="post" class="inline-form logout-inline">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+				<button type="submit" class="btn-nav ghost">Cerrar sesión</button>
+			</form>
+		</th:block>
+		<span sec:authorize="!isAuthenticated()"><a class="btn-nav" th:href="@{/login}">Iniciar sesión</a></span>
+	</nav>
+</header>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Veterinario</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container catalog-page gestion-form-page">
+	<header class="catalog-page-head">
+		<h1 class="catalog-page-title" th:text="${modo} == 'crear' ? 'Nuevo veterinario' : 'Editar'">Veterinario</h1>
+		<p class="hint catalog-page-lead">Datos del profesional para la agenda y las fichas de atención. Desmarque Activo si ya no forma parte del equipo.</p>
+	</header>
+	<section class="catalog-section">
+		<div class="solicitud-card catalog-card">
+			<form th:if="${modo} == 'crear'" th:action="@{/veterinarios}" method="post" th:object="${vetForm}" class="stack-form">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+				<label><span>Nombre *</span><input type="text" th:field="*{nombre}" required/></label>
+				<label><span>Especialidad</span><input type="text" th:field="*{especialidad}"/></label>
+				<label><input type="checkbox" th:field="*{activo}"/> Activo</label>
+				<div class="form-actions"><button type="submit" class="btn primary">Guardar</button><a class="btn ghost" th:href="@{/veterinarios}">Volver</a></div>
+			</form>
+			<form th:if="${modo} == 'editar'" th:action="@{/veterinarios/{id}/actualizar(id=${vetId})}" method="post" th:object="${vetForm}" class="stack-form">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+				<label><span>Nombre *</span><input type="text" th:field="*{nombre}" required/></label>
+				<label><span>Especialidad</span><input type="text" th:field="*{especialidad}"/></label>
+				<label><input type="checkbox" th:field="*{activo}"/> Activo</label>
+				<div class="form-actions"><button type="submit" class="btn primary">Actualizar</button><a class="btn ghost" th:href="@{/veterinarios}">Volver</a></div>
+			</form>
+		</div>
+	</section>
+</main>
+</body>
+</html>

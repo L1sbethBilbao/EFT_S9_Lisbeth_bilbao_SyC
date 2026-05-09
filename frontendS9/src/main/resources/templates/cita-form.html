@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Nueva cita</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container catalog-page gestion-form-page">
+	<header class="catalog-page-head">
+		<h1 class="catalog-page-title">Agendar cita</h1>
+		<p class="hint catalog-page-lead">Seleccione mascota, fecha y hora. Si corresponde, elija el veterinario o confirme la asignación automática.</p>
+	</header>
+	<section class="catalog-section">
+		<div class="solicitud-card catalog-card">
+			<p th:if="${mensaje}" class="flash" th:text="${mensaje}"></p>
+			<p th:if="${backendError}" class="alert" th:text="${backendError}"></p>
+			<form th:action="@{/citas}" method="post" th:object="${citaForm}" class="stack-form">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+				<label>Mascota *
+					<select th:field="*{animalId}" required>
+						<option th:each="a : ${animales}" th:value="${a.id()}" th:text="${a.nombre() + ' (' + (a.especie() != null ? a.especie() : '') + ')'}"></option>
+					</select>
+				</label>
+				<label th:if="${elegirVeterinario}">Veterinario *
+					<select th:field="*{veterinarioId}" required>
+						<option th:each="v : ${veterinarios}" th:value="${v.id()}" th:text="${v.nombre()}"></option>
+					</select>
+				</label>
+				<div th:unless="${elegirVeterinario}" class="hint">
+					<p><strong>Tu agenda (solo tú atiendes esta cita):</strong> <span th:text="${miVeterinarioNombre}">—</span></p>
+					<input type="hidden" th:field="*{veterinarioId}"/>
+				</div>
+				<label>Fecha *<input type="date" th:field="*{fecha}" required/></label>
+				<label>Hora *<input type="time" th:field="*{hora}" required/></label>
+				<label>Motivo<textarea th:field="*{motivo}" rows="2"></textarea></label>
+				<div class="form-actions"><button type="submit" class="btn primary">Guardar</button><a class="btn ghost" th:href="@{/citas}">Volver</a></div>
+			</form>
+		</div>
+	</section>
+</main>
+</body>
+</html>

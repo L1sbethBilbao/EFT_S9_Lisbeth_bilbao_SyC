@@ -1,0 +1,12 @@
+# Imagen MySQL 8 para la base "unidos_animales" (Semana 8)
+# Construir:  docker build -f Dockerfile.mysql -t unidos-animales-mysql .
+# Ejecutar:    docker run --name unidos-mysql -p 3306:3306 -d unidos-animales-mysql
+
+FROM mysql:8.0
+
+ENV MYSQL_DATABASE=unidos_animales
+ENV MYSQL_USER=app
+ENV MYSQL_PASSWORD=app
+ENV MYSQL_ROOT_PASSWORD=root
+
+EXPOSE 3306

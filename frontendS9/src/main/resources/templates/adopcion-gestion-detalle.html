@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<title>Detalle solicitud adopción</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container adopcion-detalle-page">
+	<p th:if="${mensaje}" class="flash" th:text="${mensaje}"></p>
+	<p th:if="${errorApi}" class="alert" th:text="${errorApi}"></p>
+	<p th:if="${backendError}" class="alert" th:text="${backendError}"></p>
+	<section class="panel" th:if="${solicitud != null}">
+		<header class="adopcion-detalle-head">
+			<h1>Solicitud #<span th:text="${solicitud.id()}">0</span></h1>
+			<p class="hint adopcion-detalle-code">Código seguimiento:
+				<code th:text="${solicitud.codigoSeguimiento()}">—</code></p>
+		</header>
+
+		<div class="adopcion-detalle-grid">
+			<div class="adopcion-detalle-col adopcion-detalle-col--datos">
+				<h2 class="adopcion-col-section-title">Datos de la solicitud</h2>
+				<div class="solicitud-datos-stack">
+					<div class="solicitud-card solicitud-card--adopcion">
+						<h3>Adopción</h3>
+						<dl class="detail-list detail-list--compact">
+							<dt>Mascota</dt><dd th:text="${solicitud.animalNombre()}">—</dd>
+							<dt>Estado</dt><dd><span class="solicitud-estado-pill" th:text="${solicitud.estado()}">—</span></dd>
+						</dl>
+					</div>
+					<div class="solicitud-card">
+						<h3>Solicitante</h3>
+						<dl class="detail-list detail-list--compact">
+							<dt>Nombre</dt><dd th:text="${solicitud.nombreCompleto()}">—</dd>
+							<dt>Email</dt><dd th:text="${solicitud.email()}">—</dd>
+							<dt>Teléfono</dt><dd th:text="${solicitud.telefono() != null ? solicitud.telefono() : '—'}">—</dd>
+						</dl>
+					</div>
+					<div class="solicitud-card">
+						<h3>Ubicación y hogar</h3>
+						<dl class="detail-list detail-list--compact">
+							<dt>Dirección</dt><dd th:text="${solicitud.direccion() != null ? solicitud.direccion() : '—'}">—</dd>
+							<dt>Ciudad</dt><dd th:text="${solicitud.ciudad() != null ? solicitud.ciudad() : '—'}">—</dd>
+							<dt>Vivienda</dt><dd th:text="${solicitud.tipoVivienda()}">—</dd>
+							<dt>Personas en el hogar</dt><dd th:text="${solicitud.personasEnHogar()}">—</dd>
+							<dt>¿Hay niños?</dt><dd th:text="${solicitud.tieneNinos()}">—</dd>
+							<dt>¿Otras mascotas?</dt><dd th:text="${solicitud.tieneOtrasMascotas()}">—</dd>
+						</dl>
+					</div>
+					<div class="solicitud-card solicitud-card--texto">
+						<h3>Experiencia previa</h3>
+						<p class="solicitud-texto" th:text="${solicitud.experienciaMascotas() != null ? solicitud.experienciaMascotas() : '—'}">—</p>
+					</div>
+					<div class="solicitud-card solicitud-card--texto">
+						<h3>Motivación</h3>
+						<pre class="msg-pre solicitud-motivacion" th:text="${solicitud.motivacionAdopcion()}">—</pre>
+					</div>
+				</div>
+
+				<div class="solicitud-card solicitud-card--edicion-coordinador"
+				     th:if="${solicitud.estado() == 'PENDIENTE' or solicitud.estado() == 'EN_REVISION'}">
+					<h3>Corregir datos del solicitante</h3>
+					<p class="sidebar-card-hint">Use esta sección cuando la persona le haya indicado que se equivocó al completar el formulario (por ejemplo por un mensaje en <strong>Seguimiento</strong>). Los cambios sustituyen los datos guardados; la mascota y el código de seguimiento no se modifican aquí.</p>
+					<p class="sidebar-card-hint"><strong>Constancia obligatoria:</strong> en el último campo describa cómo consta el pedido del solicitante (fecha del mensaje, medio, etc.). Ese texto quedará registrado en la conversación y lo podrá ver quien adopta.</p>
+					<form method="post" th:action="@{/adopciones/gestion/{id}/datos(id=${solicitud.id()})}"
+					      th:object="${solicitudEdicionForm}" class="stack-form stack-form--edicion-coordinador">
+						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+						<label><span>Nombre completo *</span>
+							<input type="text" th:field="*{nombreCompleto}" maxlength="200" required/></label>
+						<p class="field-error" th:if="${#fields.hasErrors('nombreCompleto')}" th:errors="*{nombreCompleto}"></p>
+						<label><span>Correo *</span>
+							<input type="email" th:field="*{email}" maxlength="255" required/></label>
+						<p class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
+						<label><span>Teléfono</span>
+							<input type="text" th:field="*{telefono}" maxlength="40"/></label>
+						<label><span>Dirección</span>
+							<input type="text" th:field="*{direccion}" maxlength="300"/></label>
+						<label><span>Ciudad / comuna</span>
+							<input type="text" th:field="*{ciudad}" maxlength="120"/></label>
+						<label><span>Tipo de vivienda *</span>
+							<select th:field="*{tipoVivienda}" required>
+								<option value="CASA">Casa</option>
+								<option value="DEPARTAMENTO">Departamento</option>
+								<option value="CAMPO">Campo / rural</option>
+								<option value="OTRO">Otro</option>
+							</select></label>
+						<label><span>Personas en el hogar *</span>
+							<input type="number" th:field="*{personasEnHogar}" min="1" required/></label>
+						<p class="field-error" th:if="${#fields.hasErrors('personasEnHogar')}" th:errors="*{personasEnHogar}"></p>
+						<label class="checkbox-row"><input type="checkbox" th:field="*{tieneNinos}"/><span>Hay niños en el hogar</span></label>
+						<label class="checkbox-row"><input type="checkbox" th:field="*{tieneOtrasMascotas}"/><span>Ya tiene otras mascotas</span></label>
+						<label><span>Experiencia previa con mascotas</span>
+							<textarea th:field="*{experienciaMascotas}" rows="4" maxlength="4000"></textarea></label>
+						<label><span>Motivación para adoptar *</span>
+							<textarea th:field="*{motivacionAdopcion}" rows="5" maxlength="4000" required></textarea></label>
+						<p class="field-error" th:if="${#fields.hasErrors('motivacionAdopcion')}" th:errors="*{motivacionAdopcion}"></p>
+						<label><span>Constancia del pedido del solicitante *</span>
+							<textarea th:field="*{constanciaSolicitante}" rows="4" maxlength="2000" required
+							          placeholder="Ej.: Solicitó corrección por mensaje en seguimiento el 07/05/2026, indicó error en la dirección."></textarea></label>
+						<p class="field-error" th:if="${#fields.hasErrors('constanciaSolicitante')}" th:errors="*{constanciaSolicitante}"></p>
+						<div class="form-actions">
+							<button type="submit" class="btn primary">Guardar cambios en la solicitud</button>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<div class="adopcion-detalle-col adopcion-detalle-col--acciones">
+				<div class="adopcion-chat-actions-grid">
+					<div class="adopcion-chat-main">
+						<h2 class="adopcion-col-section-title">Conversación</h2>
+						<div class="msg-thread msg-thread--panel">
+							<div th:each="m : ${solicitud.mensajes()}" th:classappend="${m.rolAutor() == 'COORDINADOR'} ? ' msg-coordinador' : ' msg-solicitante'"
+							     class="msg-bubble">
+								<div class="msg-meta">
+									<span th:text="${m.rolAutor() == 'COORDINADOR'} ? 'Coordinación' : 'Solicitante'">—</span>
+									<span th:if="${m.createdAt() != null}" th:text="${#temporals.format(m.createdAt(), 'dd/MM HH:mm')}"></span>
+								</div>
+								<pre class="msg-pre msg-body" th:text="${m.cuerpo()}">—</pre>
+							</div>
+						</div>
+					</div>
+					<aside class="adopcion-chat-sidebar" aria-label="Acciones de coordinación">
+						<h2 class="adopcion-col-section-title">Nueva respuesta</h2>
+						<div class="solicitud-card sidebar-card sidebar-card--respuesta">
+							<p class="sidebar-card-hint">El mensaje se verá en el seguimiento público del solicitante.</p>
+							<form method="post" th:action="@{/adopciones/gestion/{id}/mensaje(id=${solicitud.id()})}" th:object="${mensajeForm}" class="stack-form stack-form--sidebar">
+								<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+								<label><span>Mensaje</span>
+									<textarea th:field="*{cuerpo}" rows="6" maxlength="4000" required
+									          placeholder="Escriba aquí su respuesta…"></textarea></label>
+								<div class="form-actions form-actions--sidebar">
+									<button type="submit" class="btn primary">Enviar respuesta</button>
+								</div>
+							</form>
+						</div>
+
+						<h2 class="adopcion-col-section-title">Estado de la solicitud</h2>
+						<div class="solicitud-card sidebar-card sidebar-card--estado">
+							<form method="post" th:action="@{/adopciones/gestion/{id}/estado(id=${solicitud.id()})}" class="adopcion-estado-form">
+								<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+								<label class="adopcion-estado-label" for="estado-solicitud">Estado actual</label>
+								<select id="estado-solicitud" name="estado" required>
+									<option value="PENDIENTE" th:selected="${solicitud.estado() == 'PENDIENTE'}">PENDIENTE</option>
+									<option value="EN_REVISION" th:selected="${solicitud.estado() == 'EN_REVISION'}">EN_REVISION</option>
+									<option value="APROBADA" th:selected="${solicitud.estado() == 'APROBADA'}">APROBADA</option>
+									<option value="RECHAZADA" th:selected="${solicitud.estado() == 'RECHAZADA'}">RECHAZADA</option>
+								</select>
+								<button type="submit" class="btn primary">Actualizar estado</button>
+							</form>
+						</div>
+
+						<div class="adopcion-sidebar-footer">
+							<a class="btn ghost block" th:href="@{/adopciones/gestion}">← Volver al listado</a>
+						</div>
+					</aside>
+				</div>
+			</div>
+		</div>
+	</section>
+</main>
+</body>
+</html>

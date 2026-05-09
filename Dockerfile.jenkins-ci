@@ -1,0 +1,9 @@
+# Jenkins LTS con JDK 21 + Maven + Git para ejecutar análisis Maven/Sonar sin depender de mvnw (CRLF en Windows).
+FROM jenkins/jenkins:lts-jdk21
+
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends maven git \
+    && rm -rf /var/lib/apt/lists/*
+
+USER jenkins

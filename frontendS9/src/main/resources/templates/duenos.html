@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>Dueños</title>
+	<link rel="stylesheet" th:href="@{/css/fundacion.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments :: header}"></div>
+<main class="container catalog-page">
+	<p th:if="${mensaje}" class="flash" th:text="${mensaje}"></p>
+
+	<header class="catalog-page-head catalog-page-head--toolbar">
+		<div class="catalog-page-head-row">
+			<h1 class="catalog-page-title">Dueños / tutores</h1>
+			<div class="catalog-page-actions">
+				<a class="btn primary" th:href="@{/duenos/nuevo}">+ Nuevo</a>
+			</div>
+		</div>
+		<p class="hint catalog-page-lead">Personas registradas como responsables de mascotas. Desde aquí puede editar datos de contacto o eliminar un tutor del sistema.</p>
+	</header>
+
+	<section class="catalog-section">
+		<div class="solicitud-card catalog-card catalog-card--table">
+			<div class="table-wrap">
+				<table class="data-table data-table--catalog">
+					<thead>
+					<tr>
+						<th>Nombre</th>
+						<th>Email</th>
+						<th>Teléfono</th>
+						<th class="col-solicitud-detalle">Editar</th>
+						<th class="col-solicitud-eliminar">Eliminar</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:if="${#lists.isEmpty(duenos)}">
+						<td colspan="5" class="empty">No hay dueños registrados.</td>
+					</tr>
+					<tr th:each="d : ${duenos}">
+						<td th:text="${d.nombreCompleto()}"></td>
+						<td th:text="${d.email() != null ? d.email() : '—'}"></td>
+						<td th:text="${d.telefono() != null ? d.telefono() : '—'}"></td>
+						<td class="col-solicitud-detalle-cell">
+							<a class="btn btn-sm btn-solicitud-ver catalog-ficha-btn"
+							   th:href="@{/duenos/{id}/editar(id=${d.id()})}"
+							   title="Editar datos del tutor">Editar</a>
+						</td>
+						<td class="col-solicitud-eliminar-cell">
+							<form th:action="@{/duenos/{id}/eliminar(id=${d.id()})}" method="post" class="solicitud-eliminar-form">
+								<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+								<button type="submit" class="btn danger btn-sm">Eliminar</button>
+							</form>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+</main>
+</body>
+</html>
