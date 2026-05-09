@@ -14,9 +14,12 @@ pipeline {
     stages {
         stage('Sonar — Backend') {
             steps {
-                // Sin "clean": en Windows+OneDrive Docker suele fallar al borrar target/ (filesystem bloqueado).
+                // Si el volumen de Windows/OneDrive bloquea /workspace/.../target, compilar todo backend en /tmp.
                 sh '''
-                    mvn -f /workspace/backendS9/pom.xml verify sonar:sonar \
+                    rm -rf /tmp/backendS9-build
+                    mkdir -p /tmp/backendS9-build
+                    cp -a /workspace/backendS9/. /tmp/backendS9-build/
+                    mvn -f /tmp/backendS9-build/pom.xml verify sonar:sonar \
                       -Dsonar.host.url=${SONAR_HOST} \
                       -Dsonar.token=${SONAR_TOKEN}
                 '''
