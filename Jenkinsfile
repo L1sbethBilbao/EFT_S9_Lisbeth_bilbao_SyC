@@ -24,11 +24,12 @@ pipeline {
         }
         stage('Sonar — Frontend') {
             steps {
-                // target/ en el volumen Windows/OneDrive suele dar EPERM al escribir; compilar en /tmp del contenedor.
+                // Si el volumen de Windows/OneDrive bloquea /workspace/.../target, compilar todo frontend en /tmp.
                 sh '''
-                    rm -rf /tmp/maven-build/frontendS9
-                    mvn -f /workspace/frontendS9/pom.xml verify sonar:sonar \
-                      -Dproject.build.directory=/tmp/maven-build/frontendS9/target \
+                    rm -rf /tmp/frontendS9-build
+                    mkdir -p /tmp/frontendS9-build
+                    cp -a /workspace/frontendS9/. /tmp/frontendS9-build/
+                    mvn -f /tmp/frontendS9-build/pom.xml verify sonar:sonar \
                       -Dsonar.host.url=${SONAR_HOST} \
                       -Dsonar.token=${SONAR_TOKEN}
                 '''
