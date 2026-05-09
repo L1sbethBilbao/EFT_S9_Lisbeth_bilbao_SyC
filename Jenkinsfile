@@ -14,11 +14,11 @@ pipeline {
     stages {
         stage('Sonar — Backend') {
             steps {
-                // Si el volumen de Windows/OneDrive bloquea /workspace/.../target, compilar todo backend en /tmp.
+                // Usar WORKSPACE (checkout SCM); /workspace solo aplica a mounts manuales sin clone.
                 sh '''
                     rm -rf /tmp/backendS9-build
                     mkdir -p /tmp/backendS9-build
-                    cp -a /workspace/backendS9/. /tmp/backendS9-build/
+                    cp -a "${WORKSPACE}/backendS9/." /tmp/backendS9-build/
                     mvn -f /tmp/backendS9-build/pom.xml verify sonar:sonar \
                       -Dsonar.host.url=${SONAR_HOST} \
                       -Dsonar.token=${SONAR_TOKEN}
@@ -27,11 +27,10 @@ pipeline {
         }
         stage('Sonar — Frontend') {
             steps {
-                // Si el volumen de Windows/OneDrive bloquea /workspace/.../target, compilar todo frontend en /tmp.
                 sh '''
                     rm -rf /tmp/frontendS9-build
                     mkdir -p /tmp/frontendS9-build
-                    cp -a /workspace/frontendS9/. /tmp/frontendS9-build/
+                    cp -a "${WORKSPACE}/frontendS9/." /tmp/frontendS9-build/
                     mvn -f /tmp/frontendS9-build/pom.xml verify sonar:sonar \
                       -Dsonar.host.url=${SONAR_HOST} \
                       -Dsonar.token=${SONAR_TOKEN}

@@ -67,6 +67,9 @@ Reliability / Security / Maintainability y el filtro por severidad (BLOCKER / CR
 • Pipeline → Definition: Pipeline script from SCM (o “Pipeline script” pegando el Jenkinsfile).
 • Si usas SCM, apunta a tu repositorio; si trabajas solo local, usa opción B.
 
+Nota rutas: con “Pipeline script from SCM”, el código queda en $WORKSPACE (clone),
+no en /workspace. El Jenkinsfile ya usa $WORKSPACE/backendS9 y …/frontendS9.
+
 --------------------------------------------------------------------------------
 5) Job en Jenkins (opción B — Freestyle, rápido para laboratorio)
 --------------------------------------------------------------------------------
@@ -75,13 +78,13 @@ Reliability / Security / Maintainability y el filtro por severidad (BLOCKER / CR
 • Build → Execute shell (mismo criterio que el Jenkinsfile: sin “clean” en Windows;
   frontend compila target en /tmp para evitar “Operation not permitted” en OneDrive):
 
-cd /workspace/backendS9
+cd "${WORKSPACE}/backendS9"
 mvn verify sonar:sonar \
   -Dsonar.host.url=http://sonarqube:9000 \
   -Dsonar.token=TU_TOKEN_AQUI
 
 rm -rf /tmp/maven-build/frontendS9
-cd /workspace/frontendS9
+cd "${WORKSPACE}/frontendS9"
 mvn verify sonar:sonar \
   -Dproject.build.directory=/tmp/maven-build/frontendS9/target \
   -Dsonar.host.url=http://sonarqube:9000 \
