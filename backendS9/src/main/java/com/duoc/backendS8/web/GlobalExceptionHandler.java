@@ -2,6 +2,7 @@ package com.duoc.backendS8.web;
 
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -37,5 +38,12 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(IllegalStateException.class)
 	public ResponseEntity<ErrorResponse> conflict(IllegalStateException ex) {
 		return ResponseEntity.badRequest().body(new ErrorResponse(ex.getMessage(), null));
+	}
+
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<ErrorResponse> dataIntegrity(DataIntegrityViolationException ex) {
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(
+				"No se puede eliminar o actualizar: hay registros relacionados (por ejemplo citas o solicitudes de adopción).",
+				null));
 	}
 }

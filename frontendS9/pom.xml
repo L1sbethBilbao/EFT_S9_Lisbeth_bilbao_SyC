@@ -123,6 +123,9 @@
 						<goals>
 							<goal>report</goal>
 						</goals>
+						<configuration>
+							<outputDirectory>${project.basedir}/../reportes_jacoco/frontendS9</outputDirectory>
+						</configuration>
 					</execution>
 					<execution>
 						<id>jacoco-check</id>
@@ -171,6 +174,7 @@
 					<nvdApiDelay>${owasp.dependency-check.nvd-delay-ms}</nvdApiDelay>
 					<failBuildOnCVSS>${owasp.dependency-check.fail-cvss}</failBuildOnCVSS>
 					<suppressionFile>${project.basedir}/dependency-check-suppressions.xml</suppressionFile>
+					<outputDirectory>${project.basedir}/../reportes_dependency_check/frontendS9</outputDirectory>
 					<formats>
 						<format>HTML</format>
 						<format>JSON</format>

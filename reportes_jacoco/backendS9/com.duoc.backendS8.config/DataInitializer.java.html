@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataInitializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.backendS8.config</a> &gt; <span class="el_source">DataInitializer.java</span></div><h1>DataInitializer.java</h1><pre class="source lang-java linenums">package com.duoc.backendS8.config;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.duoc.backendS8.entity.Animal;
+import com.duoc.backendS8.entity.Cita;
+import com.duoc.backendS8.entity.Dueno;
+import com.duoc.backendS8.entity.EstadoAdopcion;
+import com.duoc.backendS8.entity.EstadoCita;
+import com.duoc.backendS8.entity.Factura;
+import com.duoc.backendS8.entity.GeneroAnimal;
+import com.duoc.backendS8.entity.LineaFactura;
+import com.duoc.backendS8.entity.RegistroMedico;
+import com.duoc.backendS8.entity.TipoLineaFactura;
+import com.duoc.backendS8.entity.RolUsuario;
+import com.duoc.backendS8.entity.Usuario;
+import com.duoc.backendS8.entity.Veterinario;
+import com.duoc.backendS8.repository.AnimalRepository;
+import com.duoc.backendS8.repository.CitaRepository;
+import com.duoc.backendS8.repository.DuenoRepository;
+import com.duoc.backendS8.repository.FacturaRepository;
+import com.duoc.backendS8.repository.RegistroMedicoRepository;
+import com.duoc.backendS8.repository.UsuarioRepository;
+import com.duoc.backendS8.repository.VeterinarioRepository;
+
+@Component
+public class DataInitializer implements CommandLineRunner {
+
+	private final UsuarioRepository usuarioRepository;
+	private final AnimalRepository animalRepository;
+	private final DuenoRepository duenoRepository;
+	private final VeterinarioRepository veterinarioRepository;
+	private final CitaRepository citaRepository;
+	private final RegistroMedicoRepository registroMedicoRepository;
+	private final FacturaRepository facturaRepository;
+	private final PasswordEncoder passwordEncoder;
+	private final String seedUserPassword;
+
+<span class="fc" id="L49">	public DataInitializer(</span>
+			UsuarioRepository usuarioRepository,
+			AnimalRepository animalRepository,
+			DuenoRepository duenoRepository,
+			VeterinarioRepository veterinarioRepository,
+			CitaRepository citaRepository,
+			RegistroMedicoRepository registroMedicoRepository,
+			FacturaRepository facturaRepository,
+			PasswordEncoder passwordEncoder,
+			@Value(&quot;${app.seed.user-password}&quot;) String seedUserPassword) {
+<span class="fc" id="L59">		this.usuarioRepository = usuarioRepository;</span>
+<span class="fc" id="L60">		this.animalRepository = animalRepository;</span>
+<span class="fc" id="L61">		this.duenoRepository = duenoRepository;</span>
+<span class="fc" id="L62">		this.veterinarioRepository = veterinarioRepository;</span>
+<span class="fc" id="L63">		this.citaRepository = citaRepository;</span>
+<span class="fc" id="L64">		this.registroMedicoRepository = registroMedicoRepository;</span>
+<span class="fc" id="L65">		this.facturaRepository = facturaRepository;</span>
+<span class="fc" id="L66">		this.passwordEncoder = passwordEncoder;</span>
+<span class="fc" id="L67">		this.seedUserPassword = seedUserPassword;</span>
+<span class="fc" id="L68">	}</span>
+
+	@Override
+	@Transactional
+	public void run(String... args) {
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">		if (usuarioRepository.count() == 0) {</span>
+<span class="fc" id="L74">			usuarioRepository.save(Usuario.builder()</span>
+<span class="fc" id="L75">					.username(&quot;maria&quot;)</span>
+<span class="fc" id="L76">					.password(passwordEncoder.encode(seedUserPassword))</span>
+<span class="fc" id="L77">					.rol(RolUsuario.COORDINADOR)</span>
+<span class="fc" id="L78">					.build());</span>
+<span class="fc" id="L79">			usuarioRepository.save(Usuario.builder()</span>
+<span class="fc" id="L80">					.username(&quot;pedro&quot;)</span>
+<span class="fc" id="L81">					.password(passwordEncoder.encode(seedUserPassword))</span>
+<span class="fc" id="L82">					.rol(RolUsuario.VETERINARIO)</span>
+<span class="fc" id="L83">					.build());</span>
+<span class="fc" id="L84">			usuarioRepository.save(Usuario.builder()</span>
+<span class="fc" id="L85">					.username(&quot;luis&quot;)</span>
+<span class="fc" id="L86">					.password(passwordEncoder.encode(seedUserPassword))</span>
+<span class="fc" id="L87">					.rol(RolUsuario.GESTOR)</span>
+<span class="fc" id="L88">					.build());</span>
+		}
+
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">		if (duenoRepository.count() &gt; 0) {</span>
+<span class="nc" id="L92">			vincularPedroConVeterinario();</span>
+<span class="nc" id="L93">			seedMascotasCatalogoAmpliado();</span>
+<span class="nc" id="L94">			return;</span>
+		}
+
+<span class="fc" id="L97">		Dueno duenoAna = duenoRepository.save(Dueno.builder()</span>
+<span class="fc" id="L98">				.nombreCompleto(&quot;Ana Pérez&quot;)</span>
+<span class="fc" id="L99">				.email(&quot;ana.perez@ejemplo.cl&quot;)</span>
+<span class="fc" id="L100">				.telefono(&quot;+56912345678&quot;)</span>
+<span class="fc" id="L101">				.direccion(&quot;Santiago Centro&quot;)</span>
+<span class="fc" id="L102">				.build());</span>
+<span class="fc" id="L103">		Dueno duenoCarlos = duenoRepository.save(Dueno.builder()</span>
+<span class="fc" id="L104">				.nombreCompleto(&quot;Carlos Rojas&quot;)</span>
+<span class="fc" id="L105">				.email(&quot;carlos@ejemplo.cl&quot;)</span>
+<span class="fc" id="L106">				.telefono(&quot;+56987654321&quot;)</span>
+<span class="fc" id="L107">				.direccion(&quot;Providencia&quot;)</span>
+<span class="fc" id="L108">				.build());</span>
+
+<span class="fc" id="L110">		Veterinario vet1 = veterinarioRepository.save(Veterinario.builder()</span>
+<span class="fc" id="L111">				.nombre(&quot;Dra. Marta Soto&quot;)</span>
+<span class="fc" id="L112">				.especialidad(&quot;Medicina general&quot;)</span>
+<span class="fc" id="L113">				.activo(true)</span>
+<span class="fc" id="L114">				.build());</span>
+<span class="fc" id="L115">		Veterinario vet2 = veterinarioRepository.save(Veterinario.builder()</span>
+<span class="fc" id="L116">				.nombre(&quot;Dr. Pedro Morales&quot;)</span>
+<span class="fc" id="L117">				.especialidad(&quot;Cirugía menor&quot;)</span>
+<span class="fc" id="L118">				.activo(true)</span>
+<span class="fc" id="L119">				.build());</span>
+
+<span class="fc" id="L121">		Animal luna = animalRepository.save(Animal.builder()</span>
+<span class="fc" id="L122">				.nombre(&quot;Luna&quot;)</span>
+<span class="fc" id="L123">				.especie(&quot;Perro&quot;)</span>
+<span class="fc" id="L124">				.raza(&quot;Mestizo&quot;)</span>
+<span class="fc" id="L125">				.edad(3)</span>
+<span class="fc" id="L126">				.ubicacion(&quot;Santiago&quot;)</span>
+<span class="fc" id="L127">				.genero(GeneroAnimal.FEMENINO)</span>
+<span class="fc" id="L128">				.estadoAdopcion(EstadoAdopcion.DISPONIBLE)</span>
+<span class="fc" id="L129">				.fotoUrl(&quot;https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&quot;)</span>
+<span class="fc" id="L130">				.dueno(null)</span>
+<span class="fc" id="L131">				.build());</span>
+<span class="fc" id="L132">		Animal mish = animalRepository.save(Animal.builder()</span>
+<span class="fc" id="L133">				.nombre(&quot;Mish&quot;)</span>
+<span class="fc" id="L134">				.especie(&quot;Gato&quot;)</span>
+<span class="fc" id="L135">				.raza(&quot;Siamés&quot;)</span>
+<span class="fc" id="L136">				.edad(2)</span>
+<span class="fc" id="L137">				.ubicacion(&quot;Providencia&quot;)</span>
+<span class="fc" id="L138">				.genero(GeneroAnimal.MASCULINO)</span>
+<span class="fc" id="L139">				.estadoAdopcion(EstadoAdopcion.EN_ACOGIDA)</span>
+<span class="fc" id="L140">				.fotoUrl(&quot;https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&quot;)</span>
+<span class="fc" id="L141">				.dueno(duenoAna)</span>
+<span class="fc" id="L142">				.build());</span>
+<span class="fc" id="L143">		animalRepository.save(Animal.builder()</span>
+<span class="fc" id="L144">				.nombre(&quot;Kiwi&quot;)</span>
+<span class="fc" id="L145">				.especie(&quot;Loro&quot;)</span>
+<span class="fc" id="L146">				.raza(&quot;Amazonas&quot;)</span>
+<span class="fc" id="L147">				.edad(5)</span>
+<span class="fc" id="L148">				.ubicacion(&quot;Maipú&quot;)</span>
+<span class="fc" id="L149">				.genero(GeneroAnimal.DESCONOCIDO)</span>
+<span class="fc" id="L150">				.estadoAdopcion(EstadoAdopcion.ADOPTADO)</span>
+<span class="fc" id="L151">				.fotoUrl(null)</span>
+<span class="fc" id="L152">				.dueno(duenoCarlos)</span>
+<span class="fc" id="L153">				.build());</span>
+
+<span class="fc" id="L155">		Cita citaDemo = citaRepository.save(Cita.builder()</span>
+<span class="fc" id="L156">				.animal(luna)</span>
+<span class="fc" id="L157">				.veterinario(vet1)</span>
+<span class="fc" id="L158">				.fechaHora(LocalDateTime.now().minusDays(1).withHour(10).withMinute(0))</span>
+<span class="fc" id="L159">				.motivo(&quot;Control anual y vacuna&quot;)</span>
+<span class="fc" id="L160">				.estado(EstadoCita.PROGRAMADA)</span>
+<span class="fc" id="L161">				.build());</span>
+
+<span class="fc" id="L163">		RegistroMedico registro = registroMedicoRepository.save(RegistroMedico.builder()</span>
+<span class="fc" id="L164">				.cita(citaDemo)</span>
+<span class="fc" id="L165">				.fechaAtencion(LocalDateTime.now().minusDays(1).withHour(11).withMinute(0))</span>
+<span class="fc" id="L166">				.diagnostico(&quot;Estado general bueno; se aplicó vacuna anual.&quot;)</span>
+<span class="fc" id="L167">				.tratamiento(&quot;Reposo 24 h&quot;)</span>
+<span class="fc" id="L168">				.medicamentos(&quot;Antiinflamatorio suave&quot;)</span>
+<span class="fc" id="L169">				.notas(&quot;Próxima revisión en 6 meses.&quot;)</span>
+<span class="fc" id="L170">				.build());</span>
+<span class="fc" id="L171">		citaDemo.setEstado(EstadoCita.COMPLETADA);</span>
+<span class="fc" id="L172">		citaRepository.save(citaDemo);</span>
+
+<span class="fc" id="L174">		Factura factura = Factura.builder()</span>
+<span class="fc" id="L175">				.registroMedico(registro)</span>
+<span class="fc" id="L176">				.numeroFactura(&quot;F-&quot; + LocalDate.now().getYear() + &quot;-00001&quot;)</span>
+<span class="fc" id="L177">				.fechaEmision(LocalDate.now())</span>
+<span class="fc" id="L178">				.total(BigDecimal.ZERO)</span>
+<span class="fc" id="L179">				.build();</span>
+<span class="fc" id="L180">		LineaFactura l1 = LineaFactura.builder()</span>
+<span class="fc" id="L181">				.factura(factura)</span>
+<span class="fc" id="L182">				.tipo(TipoLineaFactura.SERVICIO)</span>
+<span class="fc" id="L183">				.descripcion(&quot;Consulta veterinaria y vacunación&quot;)</span>
+<span class="fc" id="L184">				.monto(new BigDecimal(&quot;45000&quot;))</span>
+<span class="fc" id="L185">				.build();</span>
+<span class="fc" id="L186">		LineaFactura l2 = LineaFactura.builder()</span>
+<span class="fc" id="L187">				.factura(factura)</span>
+<span class="fc" id="L188">				.tipo(TipoLineaFactura.MEDICAMENTO)</span>
+<span class="fc" id="L189">				.descripcion(&quot;Medicamento antiinflamatorio&quot;)</span>
+<span class="fc" id="L190">				.monto(new BigDecimal(&quot;12000&quot;))</span>
+<span class="fc" id="L191">				.build();</span>
+<span class="fc" id="L192">		factura.getLineas().add(l1);</span>
+<span class="fc" id="L193">		factura.getLineas().add(l2);</span>
+<span class="fc" id="L194">		factura.setTotal(new BigDecimal(&quot;57000&quot;));</span>
+<span class="fc" id="L195">		facturaRepository.save(factura);</span>
+<span class="fc" id="L196">		registro.setFactura(factura);</span>
+
+<span class="fc" id="L198">		citaRepository.save(Cita.builder()</span>
+<span class="fc" id="L199">				.animal(mish)</span>
+<span class="fc" id="L200">				.veterinario(vet2)</span>
+<span class="fc" id="L201">				.fechaHora(LocalDateTime.now().plusDays(3).withHour(15).withMinute(0))</span>
+<span class="fc" id="L202">				.motivo(&quot;Revisión dermatológica&quot;)</span>
+<span class="fc" id="L203">				.estado(EstadoCita.PROGRAMADA)</span>
+<span class="fc" id="L204">				.build());</span>
+
+<span class="fc" id="L206">		vincularPedroConVeterinario();</span>
+<span class="fc" id="L207">		seedMascotasCatalogoAmpliado();</span>
+<span class="fc" id="L208">	}</span>
+
+	/**
+	 * Añade mascotas de demostración si aún no existen (por nombre), para enriquecer el catálogo
+	 * sin borrar datos en bases ya inicializadas.
+	 */
+	private void seedMascotasCatalogoAmpliado() {
+<span class="fc" id="L215">		Dueno duenoAna = duenoRepository.findAll().stream()</span>
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">				.filter(d -&gt; d.getNombreCompleto() != null</span>
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">						&amp;&amp; d.getNombreCompleto().toLowerCase().contains(&quot;ana&quot;))</span>
+<span class="fc" id="L218">				.findFirst()</span>
+<span class="fc" id="L219">				.orElse(null);</span>
+<span class="fc" id="L220">		Dueno duenoCarlos = duenoRepository.findAll().stream()</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">				.filter(d -&gt; d.getNombreCompleto() != null</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">						&amp;&amp; d.getNombreCompleto().toLowerCase().contains(&quot;carlos&quot;))</span>
+<span class="fc" id="L223">				.findFirst()</span>
+<span class="fc" id="L224">				.orElse(null);</span>
+
+<span class="fc" id="L226">		List&lt;Animal&gt; extras = Arrays.asList(</span>
+<span class="fc" id="L227">				Animal.builder().nombre(&quot;Toby&quot;).especie(&quot;Perro&quot;).raza(&quot;Labrador&quot;).edad(4).ubicacion(&quot;Viña del Mar&quot;)</span>
+<span class="fc" id="L228">						.genero(GeneroAnimal.MASCULINO).estadoAdopcion(EstadoAdopcion.DISPONIBLE)</span>
+<span class="fc" id="L229">						.fotoUrl(&quot;https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&quot;).dueno(null).build(),</span>
+<span class="fc" id="L230">				Animal.builder().nombre(&quot;Nala&quot;).especie(&quot;Gato&quot;).raza(&quot;Persa&quot;).edad(1).ubicacion(&quot;Valparaíso&quot;)</span>
+<span class="fc" id="L231">						.genero(GeneroAnimal.FEMENINO).estadoAdopcion(EstadoAdopcion.DISPONIBLE)</span>
+<span class="fc" id="L232">						.fotoUrl(&quot;https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&quot;).dueno(null).build(),</span>
+<span class="fc" id="L233">				Animal.builder().nombre(&quot;Simba&quot;).especie(&quot;Perro&quot;).raza(&quot;Beagle&quot;).edad(2).ubicacion(&quot;Concepción&quot;)</span>
+<span class="fc" id="L234">						.genero(GeneroAnimal.MASCULINO).estadoAdopcion(EstadoAdopcion.EN_ACOGIDA)</span>
+<span class="fc" id="L235">						.fotoUrl(&quot;https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?w=400&quot;).dueno(duenoAna).build(),</span>
+<span class="fc" id="L236">				Animal.builder().nombre(&quot;Canela&quot;).especie(&quot;Conejo&quot;).raza(&quot;Enano&quot;).edad(1).ubicacion(&quot;La Serena&quot;)</span>
+<span class="fc" id="L237">						.genero(GeneroAnimal.FEMENINO).estadoAdopcion(EstadoAdopcion.DISPONIBLE)</span>
+<span class="fc" id="L238">						.fotoUrl(&quot;https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&quot;).dueno(null).build(),</span>
+<span class="fc" id="L239">				Animal.builder().nombre(&quot;Thor&quot;).especie(&quot;Perro&quot;).raza(&quot;Pastor alemán&quot;).edad(5).ubicacion(&quot;Antofagasta&quot;)</span>
+<span class="fc" id="L240">						.genero(GeneroAnimal.MASCULINO).estadoAdopcion(EstadoAdopcion.DISPONIBLE)</span>
+<span class="fc" id="L241">						.fotoUrl(&quot;https://images.unsplash.com/photo-1568572933382-74d440642377?w=400&quot;).dueno(null).build(),</span>
+<span class="fc" id="L242">				Animal.builder().nombre(&quot;Mimi&quot;).especie(&quot;Gato&quot;).raza(&quot;Mestizo&quot;).edad(6).ubicacion(&quot;Temuco&quot;)</span>
+<span class="fc" id="L243">						.genero(GeneroAnimal.FEMENINO).estadoAdopcion(EstadoAdopcion.ADOPTADO)</span>
+<span class="fc" id="L244">						.fotoUrl(&quot;https://images.unsplash.com/photo-1494256997604-768d1f608cac?w=400&quot;).dueno(duenoCarlos).build(),</span>
+<span class="fc" id="L245">				Animal.builder().nombre(&quot;Zeus&quot;).especie(&quot;Perro&quot;).raza(&quot;Bulldog francés&quot;).edad(3).ubicacion(&quot;Puerto Montt&quot;)</span>
+<span class="fc" id="L246">						.genero(GeneroAnimal.MASCULINO).estadoAdopcion(EstadoAdopcion.EN_ACOGIDA)</span>
+<span class="fc" id="L247">						.fotoUrl(&quot;https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=400&quot;).dueno(null).build(),</span>
+<span class="fc" id="L248">				Animal.builder().nombre(&quot;Lola&quot;).especie(&quot;Gato&quot;).raza(&quot;Mestizo&quot;).edad(2).ubicacion(&quot;Rancagua&quot;)</span>
+<span class="fc" id="L249">						.genero(GeneroAnimal.FEMENINO).estadoAdopcion(EstadoAdopcion.DISPONIBLE)</span>
+<span class="fc" id="L250">						.fotoUrl(&quot;https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=400&quot;).dueno(null).build(),</span>
+<span class="fc" id="L251">				Animal.builder().nombre(&quot;Coco&quot;).especie(&quot;Loro&quot;).raza(&quot;Cacatúa&quot;).edad(8).ubicacion(&quot;Santiago&quot;)</span>
+<span class="fc" id="L252">						.genero(GeneroAnimal.DESCONOCIDO).estadoAdopcion(EstadoAdopcion.NO_APLICA_CLINICA)</span>
+<span class="fc" id="L253">						.fotoUrl(&quot;https://images.unsplash.com/photo-1552728089-57bdde30beb7?w=400&quot;).dueno(duenoAna).build(),</span>
+<span class="fc" id="L254">				Animal.builder().nombre(&quot;Max&quot;).especie(&quot;Perro&quot;).raza(&quot;Golden retriever&quot;).edad(4).ubicacion(&quot;Ñuñoa&quot;)</span>
+<span class="fc" id="L255">						.genero(GeneroAnimal.MASCULINO).estadoAdopcion(EstadoAdopcion.DISPONIBLE)</span>
+<span class="fc" id="L256">						.fotoUrl(&quot;https://images.unsplash.com/photo-1633722715463-d30f42f815e4?w=400&quot;).dueno(null).build(),</span>
+<span class="fc" id="L257">				Animal.builder().nombre(&quot;Bella&quot;).especie(&quot;Gato&quot;).raza(&quot;British shorthair&quot;).edad(3).ubicacion(&quot;Las Condes&quot;)</span>
+<span class="fc" id="L258">						.genero(GeneroAnimal.FEMENINO).estadoAdopcion(EstadoAdopcion.DISPONIBLE)</span>
+<span class="fc" id="L259">						.fotoUrl(&quot;https://images.unsplash.com/photo-1529774898137-bff8a61bd5ca?w=400&quot;).dueno(null).build(),</span>
+<span class="fc" id="L260">				Animal.builder().nombre(&quot;Duke&quot;).especie(&quot;Perro&quot;).raza(&quot;Rottweiler&quot;).edad(6).ubicacion(&quot;Peñalolén&quot;)</span>
+<span class="fc" id="L261">						.genero(GeneroAnimal.MASCULINO).estadoAdopcion(EstadoAdopcion.ADOPTADO)</span>
+<span class="fc" id="L262">						.fotoUrl(&quot;https://images.unsplash.com/photo-1567752881298-894bb81f9379?w=400&quot;).dueno(duenoCarlos).build(),</span>
+<span class="fc" id="L263">				Animal.builder().nombre(&quot;Pepa&quot;).especie(&quot;Gato&quot;).raza(&quot;Naranjo&quot;).edad(1).ubicacion(&quot;Quilicura&quot;)</span>
+<span class="fc" id="L264">						.genero(GeneroAnimal.FEMENINO).estadoAdopcion(EstadoAdopcion.DISPONIBLE)</span>
+<span class="fc" id="L265">						.fotoUrl(&quot;https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&quot;).dueno(null).build(),</span>
+<span class="fc" id="L266">				Animal.builder().nombre(&quot;Alf&quot;).especie(&quot;Conejo&quot;).raza(&quot;Belier&quot;).edad(2).ubicacion(&quot;Maipú&quot;)</span>
+<span class="fc" id="L267">						.genero(GeneroAnimal.MASCULINO).estadoAdopcion(EstadoAdopcion.EN_ACOGIDA)</span>
+<span class="fc" id="L268">						.fotoUrl(&quot;https://images.unsplash.com/photo-1591382386623-e08f4d75f68d?w=400&quot;).dueno(null).build(),</span>
+<span class="fc" id="L269">				Animal.builder().nombre(&quot;Kira&quot;).especie(&quot;Perro&quot;).raza(&quot;Husky&quot;).edad(2).ubicacion(&quot;Lo Barnechea&quot;)</span>
+<span class="fc" id="L270">						.genero(GeneroAnimal.FEMENINO).estadoAdopcion(EstadoAdopcion.DISPONIBLE)</span>
+<span class="fc" id="L271">						.fotoUrl(&quot;https://images.unsplash.com/photo-1605568427561-40dd23c2acea?w=400&quot;).dueno(null).build());</span>
+
+<span class="fc bfc" id="L273" title="All 2 branches covered.">		for (Animal a : extras) {</span>
+<span class="pc bpc" id="L274" title="1 of 2 branches missed.">			if (!animalRepository.existsByNombreIgnoreCase(a.getNombre())) {</span>
+<span class="fc" id="L275">				animalRepository.save(a);</span>
+			}
+		}
+<span class="fc" id="L278">	}</span>
+
+	/** Vincula el login &lt;code&gt;pedro&lt;/code&gt; a su fila de veterinario (demo nuevo o BD antigua con Jorge). */
+	private void vincularPedroConVeterinario() {
+<span class="fc" id="L282">		usuarioRepository.findByUsername(&quot;pedro&quot;).ifPresent(u -&gt; {</span>
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">			if (u.getVeterinario() != null) {</span>
+<span class="nc" id="L284">				return;</span>
+			}
+<span class="fc" id="L286">			veterinarioRepository.findAll().stream()</span>
+<span class="pc bpc" id="L287" title="1 of 2 branches missed.">					.filter(v -&gt; v.getNombre() != null</span>
+<span class="pc bpc" id="L288" title="1 of 4 branches missed.">							&amp;&amp; (v.getNombre().contains(&quot;Pedro Morales&quot;) || v.getNombre().contains(&quot;Jorge Neira&quot;)))</span>
+<span class="fc" id="L289">					.findFirst()</span>
+<span class="fc" id="L290">					.ifPresent(v -&gt; {</span>
+<span class="fc" id="L291">						u.setVeterinario(v);</span>
+<span class="fc" id="L292">						usuarioRepository.save(u);</span>
+<span class="fc" id="L293">					});</span>
+<span class="fc" id="L294">		});</span>
+<span class="fc" id="L295">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

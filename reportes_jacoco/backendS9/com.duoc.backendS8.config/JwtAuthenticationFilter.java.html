@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtAuthenticationFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.backendS8.config</a> &gt; <span class="el_source">JwtAuthenticationFilter.java</span></div><h1>JwtAuthenticationFilter.java</h1><pre class="source lang-java linenums">package com.duoc.backendS8.config;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.duoc.backendS8.service.JwtService;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+	private final JwtService jwtService;
+
+<span class="fc" id="L28">	public JwtAuthenticationFilter(JwtService jwtService) {</span>
+<span class="fc" id="L29">		this.jwtService = jwtService;</span>
+<span class="fc" id="L30">	}</span>
+
+	@Override
+	protected void doFilterInternal(
+			@NonNull HttpServletRequest request,
+			@NonNull HttpServletResponse response,
+			@NonNull FilterChain filterChain) throws ServletException, IOException {
+<span class="fc" id="L37">		String header = request.getHeader(HttpHeaders.AUTHORIZATION);</span>
+<span class="pc bpc" id="L38" title="1 of 4 branches missed.">		if (header != null &amp;&amp; header.startsWith(&quot;Bearer &quot;)) {</span>
+<span class="fc" id="L39">			String token = header.substring(7).trim();</span>
+			try {
+<span class="fc" id="L41">				String username = jwtService.extractUsername(token);</span>
+<span class="pc bpc" id="L42" title="2 of 4 branches missed.">				if (username != null &amp;&amp; jwtService.isTokenValid(token, username)) {</span>
+<span class="fc" id="L43">					var existing = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L44" title="1 of 4 branches missed.">					if (existing == null || existing instanceof AnonymousAuthenticationToken) {</span>
+<span class="fc" id="L45">						List&lt;SimpleGrantedAuthority&gt; authorities = jwtService.extractRoleNames(token).stream()</span>
+<span class="fc" id="L46">								.map(r -&gt; new SimpleGrantedAuthority(&quot;ROLE_&quot; + r))</span>
+<span class="fc" id="L47">								.collect(Collectors.toList());</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">						if (authorities.isEmpty()) {</span>
+<span class="nc" id="L49">							authorities = List.of(new SimpleGrantedAuthority(&quot;ROLE_USER&quot;));</span>
+						}
+<span class="fc" id="L51">						UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(</span>
+<span class="fc" id="L52">								username,</span>
+<span class="fc" id="L53">								null,</span>
+<span class="fc" id="L54">								authorities);</span>
+<span class="fc" id="L55">						SecurityContextHolder.getContext().setAuthentication(authentication);</span>
+					}
+				}
+<span class="fc" id="L58">			}</span>
+<span class="fc" id="L59">			catch (RuntimeException ignored) {</span>
+<span class="fc" id="L60">				SecurityContextHolder.clearContext();</span>
+			}
+		}
+<span class="fc" id="L63">		filterChain.doFilter(request, response);</span>
+<span class="fc" id="L64">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

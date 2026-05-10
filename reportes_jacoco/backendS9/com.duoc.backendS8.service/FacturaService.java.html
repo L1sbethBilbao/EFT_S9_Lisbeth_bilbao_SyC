@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FacturaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.backendS8.service</a> &gt; <span class="el_source">FacturaService.java</span></div><h1>FacturaService.java</h1><pre class="source lang-java linenums">package com.duoc.backendS8.service;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import com.duoc.backendS8.dto.FacturaRequest;
+import com.duoc.backendS8.dto.FacturaResponse;
+import com.duoc.backendS8.dto.LineaFacturaRequest;
+import com.duoc.backendS8.dto.LineaFacturaResponse;
+import com.duoc.backendS8.entity.Factura;
+import com.duoc.backendS8.entity.LineaFactura;
+import com.duoc.backendS8.entity.RegistroMedico;
+import com.duoc.backendS8.repository.FacturaRepository;
+import com.duoc.backendS8.repository.RegistroMedicoRepository;
+
+@Service
+public class FacturaService {
+
+	private final FacturaRepository facturaRepository;
+	private final RegistroMedicoRepository registroMedicoRepository;
+	private final FacturaNotificacionService facturaNotificacionService;
+
+<span class="fc" id="L29">	public FacturaService(</span>
+			FacturaRepository facturaRepository,
+			RegistroMedicoRepository registroMedicoRepository,
+			FacturaNotificacionService facturaNotificacionService) {
+<span class="fc" id="L33">		this.facturaRepository = facturaRepository;</span>
+<span class="fc" id="L34">		this.registroMedicoRepository = registroMedicoRepository;</span>
+<span class="fc" id="L35">		this.facturaNotificacionService = facturaNotificacionService;</span>
+<span class="fc" id="L36">	}</span>
+
+	@Transactional(readOnly = true)
+	public List&lt;FacturaResponse&gt; listar() {
+<span class="nc" id="L40">		return facturaRepository.findAll().stream().map(this::toResponse).toList();</span>
+	}
+
+	@Transactional(readOnly = true)
+	public FacturaResponse obtener(Long id) {
+<span class="pc" id="L45">		return facturaRepository.findById(id).map(this::toResponse)</span>
+<span class="pc" id="L46">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Factura no encontrada&quot;));</span>
+	}
+
+	@Transactional
+	public FacturaResponse crear(FacturaRequest request) {
+<span class="fc" id="L51">		RegistroMedico rm = registroMedicoRepository.findById(request.registroMedicoId())</span>
+<span class="pc" id="L52">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Registro médico no encontrado&quot;));</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">		if (rm.getFactura() != null) {</span>
+<span class="nc" id="L54">			throw new IllegalStateException(&quot;Este registro ya tiene factura emitida&quot;);</span>
+		}
+<span class="fc" id="L56">		Factura factura = Factura.builder()</span>
+<span class="fc" id="L57">				.registroMedico(rm)</span>
+<span class="fc" id="L58">				.numeroFactura(generarNumero())</span>
+<span class="fc" id="L59">				.fechaEmision(LocalDate.now())</span>
+<span class="fc" id="L60">				.total(BigDecimal.ZERO)</span>
+<span class="fc" id="L61">				.build();</span>
+<span class="fc" id="L62">		BigDecimal total = BigDecimal.ZERO;</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">		for (LineaFacturaRequest lr : request.lineas()) {</span>
+<span class="fc" id="L64">			LineaFactura linea = LineaFactura.builder()</span>
+<span class="fc" id="L65">					.factura(factura)</span>
+<span class="fc" id="L66">					.tipo(lr.tipo())</span>
+<span class="fc" id="L67">					.descripcion(lr.descripcion().trim())</span>
+<span class="fc" id="L68">					.monto(lr.monto())</span>
+<span class="fc" id="L69">					.build();</span>
+<span class="fc" id="L70">			factura.getLineas().add(linea);</span>
+<span class="fc" id="L71">			total = total.add(lr.monto());</span>
+		}
+<span class="fc" id="L73">		factura.setTotal(total);</span>
+<span class="fc" id="L74">		Factura guardada = facturaRepository.save(factura);</span>
+<span class="fc" id="L75">		rm.setFactura(guardada);</span>
+<span class="fc" id="L76">		return toResponse(guardada);</span>
+	}
+
+	@Transactional
+	public void enviarCorreo(Long facturaId, String email) {
+<span class="fc" id="L81">		Factura f = facturaRepository.findById(facturaId)</span>
+<span class="pc" id="L82">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Factura no encontrada&quot;));</span>
+<span class="fc" id="L83">		facturaNotificacionService.enviarPorCorreo(f, email);</span>
+<span class="fc" id="L84">	}</span>
+
+	private String generarNumero() {
+<span class="fc" id="L87">		long n = facturaRepository.count() + 1;</span>
+<span class="fc" id="L88">		return &quot;F-&quot; + LocalDate.now().getYear() + &quot;-&quot; + String.format(&quot;%05d&quot;, n);</span>
+	}
+
+	private FacturaResponse toResponse(Factura f) {
+<span class="fc" id="L92">		List&lt;LineaFacturaResponse&gt; lineas = f.getLineas().stream()</span>
+<span class="fc" id="L93">				.map(l -&gt; new LineaFacturaResponse(l.getId(), l.getTipo(), l.getDescripcion(), l.getMonto()))</span>
+<span class="fc" id="L94">				.toList();</span>
+<span class="fc" id="L95">		String animalNombre = f.getRegistroMedico().getCita().getAnimal().getNombre();</span>
+<span class="fc" id="L96">		return new FacturaResponse(</span>
+<span class="fc" id="L97">				f.getId(),</span>
+<span class="fc" id="L98">				f.getNumeroFactura(),</span>
+<span class="fc" id="L99">				f.getFechaEmision(),</span>
+<span class="fc" id="L100">				f.getTotal(),</span>
+<span class="fc" id="L101">				f.getRegistroMedico().getId(),</span>
+<span class="fc" id="L102">				f.getRegistroMedico().getCita().getId(),</span>
+<span class="fc" id="L103">				animalNombre,</span>
+<span class="fc" id="L104">				lineas);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

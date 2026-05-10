@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AnimalSpecifications.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.backendS8.repository</a> &gt; <span class="el_source">AnimalSpecifications.java</span></div><h1>AnimalSpecifications.java</h1><pre class="source lang-java linenums"><span class="fc" id="L1">package com.duoc.backendS8.repository;</span>
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.data.jpa.domain.Specification;
+
+import com.duoc.backendS8.entity.Animal;
+import com.duoc.backendS8.entity.EstadoAdopcion;
+import com.duoc.backendS8.entity.GeneroAnimal;
+
+import jakarta.persistence.criteria.Predicate;
+
+public final class AnimalSpecifications {
+
+	private AnimalSpecifications() {
+	}
+
+	public static Specification&lt;Animal&gt; conFiltros(
+			String especie,
+			String raza,
+			String ubicacion,
+			Integer edadMin,
+			Integer edadMax,
+			GeneroAnimal genero,
+			EstadoAdopcion estadoAdopcion) {
+<span class="fc" id="L27">		return (root, query, cb) -&gt; {</span>
+<span class="fc" id="L28">			List&lt;Predicate&gt; partes = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L29" title="1 of 4 branches missed.">			if (especie != null &amp;&amp; !especie.isBlank()) {</span>
+<span class="fc" id="L30">				String like = &quot;%&quot; + especie.trim().toLowerCase() + &quot;%&quot;;</span>
+<span class="fc" id="L31">				partes.add(cb.like(</span>
+<span class="fc" id="L32">						cb.lower(cb.coalesce(root.&lt;String&gt;get(&quot;especie&quot;), cb.literal(&quot;&quot;))),</span>
+<span class="fc" id="L33">						like));</span>
+			}
+<span class="pc bpc" id="L35" title="1 of 4 branches missed.">			if (raza != null &amp;&amp; !raza.isBlank()) {</span>
+<span class="fc" id="L36">				String like = &quot;%&quot; + raza.trim().toLowerCase() + &quot;%&quot;;</span>
+<span class="fc" id="L37">				partes.add(cb.like(</span>
+<span class="fc" id="L38">						cb.lower(cb.coalesce(root.&lt;String&gt;get(&quot;raza&quot;), cb.literal(&quot;&quot;))),</span>
+<span class="fc" id="L39">						like));</span>
+			}
+<span class="pc bpc" id="L41" title="1 of 4 branches missed.">			if (ubicacion != null &amp;&amp; !ubicacion.isBlank()) {</span>
+<span class="fc" id="L42">				String like = &quot;%&quot; + ubicacion.trim().toLowerCase() + &quot;%&quot;;</span>
+<span class="fc" id="L43">				partes.add(cb.like(</span>
+<span class="fc" id="L44">						cb.lower(cb.coalesce(root.&lt;String&gt;get(&quot;ubicacion&quot;), cb.literal(&quot;&quot;))),</span>
+<span class="fc" id="L45">						like));</span>
+			}
+<span class="fc bfc" id="L47" title="All 2 branches covered.">			if (edadMin != null) {</span>
+<span class="fc" id="L48">				partes.add(cb.greaterThanOrEqualTo(root.get(&quot;edad&quot;), edadMin));</span>
+			}
+<span class="fc bfc" id="L50" title="All 2 branches covered.">			if (edadMax != null) {</span>
+<span class="fc" id="L51">				partes.add(cb.lessThanOrEqualTo(root.get(&quot;edad&quot;), edadMax));</span>
+			}
+<span class="fc bfc" id="L53" title="All 2 branches covered.">			if (genero != null) {</span>
+<span class="fc" id="L54">				partes.add(cb.equal(root.get(&quot;genero&quot;), genero));</span>
+			}
+<span class="fc bfc" id="L56" title="All 2 branches covered.">			if (estadoAdopcion != null) {</span>
+<span class="fc" id="L57">				partes.add(cb.equal(root.get(&quot;estadoAdopcion&quot;), estadoAdopcion));</span>
+			}
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">			if (partes.isEmpty()) {</span>
+<span class="nc" id="L60">				return cb.conjunction();</span>
+			}
+<span class="fc" id="L62">			return cb.and(partes.toArray(Predicate[]::new));</span>
+		};
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.backendS8.service</a> &gt; <span class="el_source">AuthService.java</span></div><h1>AuthService.java</h1><pre class="source lang-java linenums">package com.duoc.backendS8.service;
+
+import java.util.List;
+
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.duoc.backendS8.config.JwtProperties;
+import com.duoc.backendS8.dto.LoginResponse;
+import com.duoc.backendS8.entity.RolUsuario;
+import com.duoc.backendS8.entity.Usuario;
+import com.duoc.backendS8.repository.UsuarioRepository;
+
+@Service
+public class AuthService {
+
+	private final UsuarioRepository usuarioRepository;
+	private final PasswordEncoder passwordEncoder;
+	private final JwtService jwtService;
+	private final JwtProperties jwtProperties;
+
+<span class="fc" id="L23">	public AuthService(</span>
+			UsuarioRepository usuarioRepository,
+			PasswordEncoder passwordEncoder,
+			JwtService jwtService,
+			JwtProperties jwtProperties) {
+<span class="fc" id="L28">		this.usuarioRepository = usuarioRepository;</span>
+<span class="fc" id="L29">		this.passwordEncoder = passwordEncoder;</span>
+<span class="fc" id="L30">		this.jwtService = jwtService;</span>
+<span class="fc" id="L31">		this.jwtProperties = jwtProperties;</span>
+<span class="fc" id="L32">	}</span>
+
+	public LoginResponse login(String username, String password) {
+<span class="fc" id="L35">		Usuario usuario = usuarioRepository.findByUsername(username)</span>
+<span class="fc" id="L36">				.orElseThrow(() -&gt; new BadCredentialsException(&quot;Credenciales inválidas&quot;));</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">		if (!passwordEncoder.matches(password, usuario.getPassword())) {</span>
+<span class="fc" id="L38">			throw new BadCredentialsException(&quot;Credenciales inválidas&quot;);</span>
+		}
+<span class="fc bfc" id="L40" title="All 2 branches covered.">		RolUsuario rol = usuario.getRol() != null ? usuario.getRol() : RolUsuario.GESTOR;</span>
+<span class="fc" id="L41">		String token = jwtService.generateToken(usuario.getUsername(), List.of(rol));</span>
+<span class="fc" id="L42">		long seconds = jwtProperties.expirationMs() / 1000;</span>
+<span class="fc" id="L43">		return new LoginResponse(token, &quot;Bearer&quot;, seconds, List.of(rol.name()));</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

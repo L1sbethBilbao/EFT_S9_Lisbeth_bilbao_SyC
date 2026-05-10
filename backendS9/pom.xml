@@ -148,6 +148,10 @@
 						<goals>
 							<goal>report</goal>
 						</goals>
+						<configuration>
+							<!-- Evidencia Paso 6: informe HTML fuera de target/ -->
+							<outputDirectory>${project.basedir}/../reportes_jacoco/backendS9</outputDirectory>
+						</configuration>
 					</execution>
 					<execution>
 						<id>jacoco-check</id>
@@ -191,6 +195,8 @@
 					<nvdApiDelay>${owasp.dependency-check.nvd-delay-ms}</nvdApiDelay>
 					<failBuildOnCVSS>${owasp.dependency-check.fail-cvss}</failBuildOnCVSS>
 					<suppressionFile>${project.basedir}/dependency-check-suppressions.xml</suppressionFile>
+					<!-- Evidencia Paso 5 (SCA): reportes fuera de target/ para el informe EFT -->
+					<outputDirectory>${project.basedir}/../reportes_dependency_check/backendS9</outputDirectory>
 					<formats>
 						<format>HTML</format>
 						<format>JSON</format>

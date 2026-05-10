@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdopcionPublicFlujoWebController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.frontendS8.web</a> &gt; <span class="el_source">AdopcionPublicFlujoWebController.java</span></div><h1>AdopcionPublicFlujoWebController.java</h1><pre class="source lang-java linenums">package com.duoc.frontendS8.web;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.duoc.frontendS8.dto.AdopcionSeguimientoForm;
+import com.duoc.frontendS8.dto.AdopcionSolicitudForm;
+import com.duoc.frontendS8.dto.SolicitudAdopcionApiRequest;
+import com.duoc.frontendS8.dto.SolicitudAdopcionCreadaDto;
+import com.duoc.frontendS8.service.BackendApiClient;
+import com.duoc.frontendS8.validation.InputSafety;
+
+import jakarta.validation.Valid;
+
+@Controller
+@RequestMapping(&quot;/adopciones&quot;)
+public class AdopcionPublicFlujoWebController {
+
+	private final BackendApiClient backendApiClient;
+
+<span class="fc" id="L37">	public AdopcionPublicFlujoWebController(BackendApiClient backendApiClient) {</span>
+<span class="fc" id="L38">		this.backendApiClient = backendApiClient;</span>
+<span class="fc" id="L39">	}</span>
+
+	@GetMapping(&quot;/solicitar&quot;)
+	public String formularioSolicitud(@RequestParam Long animalId, Model model) {
+		try {
+<span class="fc" id="L44">			model.addAttribute(&quot;mascota&quot;, backendApiClient.obtenerAnimal(animalId));</span>
+<span class="fc" id="L45">		}</span>
+<span class="fc" id="L46">		catch (RestClientException e) {</span>
+<span class="fc" id="L47">			model.addAttribute(&quot;backendError&quot;, &quot;No se pudo cargar la mascota.&quot;);</span>
+<span class="fc" id="L48">			return &quot;adopcion-solicitud&quot;;</span>
+		}
+<span class="fc" id="L50">		AdopcionSolicitudForm form = new AdopcionSolicitudForm();</span>
+<span class="fc" id="L51">		form.setAnimalId(animalId);</span>
+<span class="fc" id="L52">		model.addAttribute(&quot;adopcionForm&quot;, form);</span>
+<span class="fc" id="L53">		return &quot;adopcion-solicitud&quot;;</span>
+	}
+
+	@PostMapping(&quot;/solicitar&quot;)
+	public String enviarSolicitud(
+			@Valid @ModelAttribute(&quot;adopcionForm&quot;) AdopcionSolicitudForm form,
+			BindingResult bindingResult,
+			Model model,
+			RedirectAttributes redirectAttributes) {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">		if (bindingResult.hasErrors()) {</span>
+			try {
+<span class="fc" id="L64">				model.addAttribute(&quot;mascota&quot;, backendApiClient.obtenerAnimal(form.getAnimalId()));</span>
+<span class="fc" id="L65">			}</span>
+<span class="nc" id="L66">			catch (RestClientException e) {</span>
+<span class="nc" id="L67">				model.addAttribute(&quot;backendError&quot;, &quot;No se pudo cargar la mascota.&quot;);</span>
+			}
+<span class="fc" id="L69">			return &quot;adopcion-solicitud&quot;;</span>
+		}
+<span class="fc" id="L71">		var api = new SolicitudAdopcionApiRequest(</span>
+<span class="fc" id="L72">				form.getAnimalId(),</span>
+<span class="fc" id="L73">				form.getNombreCompleto(),</span>
+<span class="fc" id="L74">				form.getEmail(),</span>
+<span class="fc" id="L75">				blankToNull(form.getTelefono()),</span>
+<span class="fc" id="L76">				blankToNull(form.getDireccion()),</span>
+<span class="fc" id="L77">				blankToNull(form.getCiudad()),</span>
+<span class="fc" id="L78">				form.getTipoVivienda(),</span>
+<span class="fc" id="L79">				form.getPersonasEnHogar(),</span>
+<span class="fc" id="L80">				form.isTieneNinos(),</span>
+<span class="fc" id="L81">				form.isTieneOtrasMascotas(),</span>
+<span class="fc" id="L82">				blankToNull(form.getExperienciaMascotas()),</span>
+<span class="fc" id="L83">				form.getMotivacionAdopcion());</span>
+		try {
+<span class="fc" id="L85">			SolicitudAdopcionCreadaDto creada = backendApiClient.crearSolicitudAdopcionPublica(api);</span>
+<span class="fc" id="L86">			redirectAttributes.addFlashAttribute(&quot;adopcionCreada&quot;, creada);</span>
+<span class="fc" id="L87">			return &quot;redirect:/adopciones/gracias&quot;;</span>
+		}
+<span class="fc" id="L89">		catch (HttpClientErrorException.BadRequest e) {</span>
+<span class="fc" id="L90">			model.addAttribute(&quot;errorApi&quot;, mensajeBadRequestApi(e));</span>
+			try {
+<span class="fc" id="L92">				model.addAttribute(&quot;mascota&quot;, backendApiClient.obtenerAnimal(form.getAnimalId()));</span>
+<span class="fc" id="L93">			}</span>
+<span class="nc" id="L94">			catch (RestClientException ignored) {</span>
+<span class="nc" id="L95">				model.addAttribute(&quot;backendError&quot;, &quot;No se pudo cargar la mascota.&quot;);</span>
+			}
+<span class="fc" id="L97">			return &quot;adopcion-solicitud&quot;;</span>
+		}
+<span class="fc" id="L99">		catch (RestClientException e) {</span>
+<span class="fc" id="L100">			model.addAttribute(&quot;errorApi&quot;, &quot;No se pudo conectar con el servidor. ¿Está el backend (8080) en ejecución?&quot;);</span>
+			try {
+<span class="fc" id="L102">				model.addAttribute(&quot;mascota&quot;, backendApiClient.obtenerAnimal(form.getAnimalId()));</span>
+<span class="fc" id="L103">			}</span>
+<span class="nc" id="L104">			catch (RestClientException ignored) {</span>
+<span class="nc" id="L105">				model.addAttribute(&quot;backendError&quot;, &quot;No se pudo cargar la mascota.&quot;);</span>
+			}
+<span class="fc" id="L107">			return &quot;adopcion-solicitud&quot;;</span>
+		}
+	}
+
+	@GetMapping(&quot;/gracias&quot;)
+	public String gracias(Model model) {
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">		if (!model.containsAttribute(&quot;adopcionCreada&quot;)) {</span>
+<span class="fc" id="L114">			return &quot;redirect:/&quot;;</span>
+		}
+<span class="nc" id="L116">		return &quot;adopcion-gracias&quot;;</span>
+	}
+
+	@GetMapping(&quot;/seguimiento&quot;)
+	public String seguimientoForm(@RequestParam(required = false) String codigo, Model model) {
+<span class="fc" id="L121">		String codigoSeguro = null;</span>
+<span class="pc bpc" id="L122" title="2 of 4 branches missed.">		if (codigo != null &amp;&amp; !codigo.isBlank()) {</span>
+<span class="fc" id="L123">			String t = codigo.trim();</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">			if (InputSafety.containsDangerousMarkup(t)) {</span>
+<span class="fc" id="L125">				model.addAttribute(&quot;consultaError&quot;,</span>
+<span class="fc" id="L126">						&quot;El código de seguimiento no puede contener etiquetas HTML ni scripts.&quot;);</span>
+<span class="fc" id="L127">			}</span>
+			else {
+<span class="fc" id="L129">				codigoSeguro = t;</span>
+			}
+		}
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">		if (!model.containsAttribute(&quot;seguimientoForm&quot;)) {</span>
+<span class="fc" id="L133">			AdopcionSeguimientoForm form = new AdopcionSeguimientoForm();</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">			if (codigoSeguro != null) {</span>
+<span class="fc" id="L135">				form.setCodigoSeguimiento(codigoSeguro);</span>
+			}
+<span class="fc" id="L137">			model.addAttribute(&quot;seguimientoForm&quot;, form);</span>
+		}
+<span class="fc bfc" id="L139" title="All 2 branches covered.">		if (codigoSeguro != null) {</span>
+			try {
+<span class="fc" id="L141">				var vista = backendApiClient.consultarSeguimientoPublico(codigoSeguro);</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">				if (vista != null) {</span>
+<span class="fc" id="L143">					model.addAttribute(&quot;vista&quot;, vista);</span>
+<span class="fc" id="L144">				}</span>
+				else {
+<span class="nc" id="L146">					model.addAttribute(&quot;consultaError&quot;,</span>
+<span class="nc" id="L147">							&quot;No encontramos una solicitud con ese código. Verifique e intente de nuevo.&quot;);</span>
+				}
+<span class="nc" id="L149">			}</span>
+<span class="nc" id="L150">			catch (RestClientException e) {</span>
+<span class="nc" id="L151">				model.addAttribute(&quot;consultaError&quot;,</span>
+<span class="nc" id="L152">						&quot;No se pudo consultar el seguimiento. Compruebe que el servidor esté disponible.&quot;);</span>
+			}
+		}
+<span class="fc" id="L155">		return &quot;adopcion-seguimiento&quot;;</span>
+	}
+
+	/**
+	 * Oculta la solicitud en pantalla (sin cerrar el trámite en el servidor). El solicitante puede volver a
+	 * ingresar el código cuando lo necesite.
+	 */
+	@GetMapping(&quot;/seguimiento/salir&quot;)
+	public String seguimientoSalir(RedirectAttributes redirectAttributes) {
+<span class="fc" id="L164">		redirectAttributes.addFlashAttribute(&quot;seguimientoCerradoInfo&quot;,</span>
+<span class="fc" id="L165">				&quot;Ha cerrado la vista de su seguimiento. Nadie más que use este equipo verá el detalle aquí hasta que vuelva a ingresar el código.&quot;);</span>
+<span class="fc" id="L166">		return &quot;redirect:/adopciones/seguimiento&quot;;</span>
+	}
+
+	@PostMapping(&quot;/seguimiento/mensaje&quot;)
+	public String seguimientoEnviar(
+			@Valid @ModelAttribute(&quot;seguimientoForm&quot;) AdopcionSeguimientoForm form,
+			BindingResult bindingResult,
+			Model model,
+			RedirectAttributes redirectAttributes) {
+<span class="fc bfc" id="L175" title="All 2 branches covered.">		if (bindingResult.hasErrors()) {</span>
+<span class="fc" id="L176">			agregarVistaSiCodigoValido(form.getCodigoSeguimiento(), model);</span>
+<span class="fc" id="L177">			return &quot;adopcion-seguimiento&quot;;</span>
+		}
+		try {
+<span class="fc" id="L180">			backendApiClient.enviarMensajeSeguimientoAdopcion(form.getCodigoSeguimiento(), form.getCuerpo());</span>
+<span class="fc" id="L181">			redirectAttributes.addFlashAttribute(&quot;mensajeOk&quot;, &quot;Su mensaje fue enviado a coordinación de adopciones.&quot;);</span>
+<span class="fc" id="L182">			String q = URLEncoder.encode(form.getCodigoSeguimiento().trim(), StandardCharsets.UTF_8);</span>
+<span class="fc" id="L183">			return &quot;redirect:/adopciones/seguimiento?codigo=&quot; + q;</span>
+		}
+<span class="fc" id="L185">		catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">			if (e.getStatusCode() == HttpStatus.NOT_FOUND) {</span>
+<span class="fc" id="L187">				model.addAttribute(&quot;errorApi&quot;, &quot;Código de seguimiento no encontrado.&quot;);</span>
+<span class="fc" id="L188">			}</span>
+			else {
+<span class="fc" id="L190">				model.addAttribute(&quot;errorApi&quot;, &quot;No se pudo registrar el mensaje (¿solicitud cerrada?).&quot;);</span>
+			}
+<span class="fc" id="L192">			agregarVistaSiCodigoValido(form.getCodigoSeguimiento(), model);</span>
+<span class="fc" id="L193">			return &quot;adopcion-seguimiento&quot;;</span>
+		}
+<span class="nc" id="L195">		catch (RestClientException e) {</span>
+<span class="nc" id="L196">			model.addAttribute(&quot;errorApi&quot;, &quot;No se pudo conectar con el servidor.&quot;);</span>
+<span class="nc" id="L197">			agregarVistaSiCodigoValido(form.getCodigoSeguimiento(), model);</span>
+<span class="nc" id="L198">			return &quot;adopcion-seguimiento&quot;;</span>
+		}
+	}
+
+	private void agregarVistaSiCodigoValido(String codigo, Model model) {
+<span class="pc bpc" id="L203" title="2 of 6 branches missed.">		if (codigo == null || codigo.isBlank() || model.containsAttribute(&quot;vista&quot;)) {</span>
+<span class="fc" id="L204">			return;</span>
+		}
+		try {
+<span class="fc" id="L207">			var vista = backendApiClient.consultarSeguimientoPublico(codigo.trim());</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">			if (vista != null) {</span>
+<span class="nc" id="L209">				model.addAttribute(&quot;vista&quot;, vista);</span>
+			}
+<span class="nc" id="L211">		}</span>
+<span class="nc" id="L212">		catch (RestClientException ignored) {</span>
+			// ya hay errorApi / consultaError en pantalla
+		}
+<span class="fc" id="L215">	}</span>
+
+	private static String mensajeBadRequestApi(HttpClientErrorException.BadRequest e) {
+		try {
+<span class="fc" id="L219">			String raw = e.getResponseBodyAsString(StandardCharsets.UTF_8);</span>
+<span class="pc bpc" id="L220" title="2 of 4 branches missed.">			if (raw != null &amp;&amp; !raw.isBlank()) {</span>
+<span class="fc" id="L221">				JsonNode root = new ObjectMapper().readTree(raw);</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">				if (root.hasNonNull(&quot;message&quot;)) {</span>
+<span class="fc" id="L223">					String m = root.get(&quot;message&quot;).asText();</span>
+<span class="pc bpc" id="L224" title="2 of 4 branches missed.">					if (m != null &amp;&amp; !m.isBlank()) {</span>
+<span class="fc" id="L225">						return m;</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L230">		catch (Exception ignored) {</span>
+			// mensaje genérico
+		}
+<span class="nc" id="L233">		return &quot;Revise los datos enviados; el servidor no aceptó la solicitud.&quot;;</span>
+	}
+
+	private static String blankToNull(String s) {
+<span class="pc bpc" id="L237" title="2 of 4 branches missed.">		if (s == null || s.isBlank()) {</span>
+<span class="fc" id="L238">			return null;</span>
+		}
+<span class="nc" id="L240">		return s.trim();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

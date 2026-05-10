@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.frontendS8.web</a> &gt; <span class="el_source">HomeController.java</span></div><h1>HomeController.java</h1><pre class="source lang-java linenums">package com.duoc.frontendS8.web;
+
+import java.util.List;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.RestClientException;
+
+import com.duoc.frontendS8.dto.AnimalDto;
+import com.duoc.frontendS8.service.BackendApiClient;
+import com.duoc.frontendS8.validation.InputSafety;
+
+@Controller
+public class HomeController {
+
+	private static final String FILTRO_SEGURIDAD_AVISO =
+			&quot;Un filtro contenía texto no permitido (etiquetas HTML o scripts) y fue omitido por seguridad.&quot;;
+
+	private final BackendApiClient backendApiClient;
+
+<span class="fc" id="L23">	public HomeController(BackendApiClient backendApiClient) {</span>
+<span class="fc" id="L24">		this.backendApiClient = backendApiClient;</span>
+<span class="fc" id="L25">	}</span>
+
+	@GetMapping(&quot;/&quot;)
+	public String index(
+			@RequestParam(required = false) String especie,
+			@RequestParam(required = false) String raza,
+			@RequestParam(required = false) String ubicacion,
+			@RequestParam(required = false) Integer edadMin,
+			@RequestParam(required = false) Integer edadMax,
+			@RequestParam(required = false) String genero,
+			@RequestParam(required = false) String estadoAdopcion,
+			Model model) {
+<span class="fc" id="L37">		boolean[] filtroPeligroso = { false };</span>
+<span class="fc" id="L38">		String especieQ = safeCatalogParam(especie, filtroPeligroso);</span>
+<span class="fc" id="L39">		String razaQ = safeCatalogParam(raza, filtroPeligroso);</span>
+<span class="fc" id="L40">		String ubicacionQ = safeCatalogParam(ubicacion, filtroPeligroso);</span>
+<span class="fc" id="L41">		String generoQ = safeCatalogParam(genero, filtroPeligroso);</span>
+<span class="fc" id="L42">		String estadoQ = safeCatalogParam(estadoAdopcion, filtroPeligroso);</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">		if (filtroPeligroso[0]) {</span>
+<span class="fc" id="L44">			model.addAttribute(&quot;filtroSeguridadAviso&quot;, FILTRO_SEGURIDAD_AVISO);</span>
+		}
+		try {
+<span class="fc" id="L47">			List&lt;AnimalDto&gt; animales = backendApiClient.listarAnimales(</span>
+<span class="fc" id="L48">					especieQ, razaQ, ubicacionQ, edadMin, edadMax, generoQ, estadoQ);</span>
+<span class="fc" id="L49">			model.addAttribute(&quot;animales&quot;, animales);</span>
+<span class="fc" id="L50">			model.addAttribute(&quot;filtroEspecie&quot;, especieQ);</span>
+<span class="fc" id="L51">			model.addAttribute(&quot;filtroRaza&quot;, razaQ);</span>
+<span class="fc" id="L52">			model.addAttribute(&quot;filtroUbicacion&quot;, ubicacionQ);</span>
+<span class="fc" id="L53">			model.addAttribute(&quot;filtroEdadMin&quot;, edadMin);</span>
+<span class="fc" id="L54">			model.addAttribute(&quot;filtroEdadMax&quot;, edadMax);</span>
+<span class="fc" id="L55">			model.addAttribute(&quot;filtroGenero&quot;, generoQ);</span>
+<span class="fc" id="L56">			model.addAttribute(&quot;filtroEstadoAdopcion&quot;, estadoQ);</span>
+<span class="fc" id="L57">		}</span>
+<span class="fc" id="L58">		catch (RestClientException e) {</span>
+<span class="fc" id="L59">			model.addAttribute(&quot;animales&quot;, List.&lt;AnimalDto&gt;of());</span>
+<span class="fc" id="L60">			model.addAttribute(</span>
+<span class="fc" id="L61">					&quot;backendError&quot;,</span>
+<span class="fc" id="L62">					&quot;No se pudo conectar con el API. Asegúrese de que el backend esté en ejecución (puerto 8080) y MySQL disponible.&quot;);</span>
+		}
+<span class="fc" id="L64">		model.addAttribute(&quot;tituloCatalogo&quot;, &quot;Catálogo de mascotas&quot;);</span>
+<span class="fc" id="L65">		model.addAttribute(&quot;soloDisponibles&quot;, false);</span>
+<span class="fc" id="L66">		model.addAttribute(&quot;filterFormAction&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L67">		return &quot;index&quot;;</span>
+	}
+
+	@GetMapping(&quot;/adopciones/disponibles&quot;)
+	public String disponiblesParaAdopcion(
+			@RequestParam(required = false) String especie,
+			@RequestParam(required = false) String raza,
+			@RequestParam(required = false) String ubicacion,
+			@RequestParam(required = false) Integer edadMin,
+			@RequestParam(required = false) Integer edadMax,
+			@RequestParam(required = false) String genero,
+			Model model) {
+<span class="fc" id="L79">		boolean[] filtroPeligroso = { false };</span>
+<span class="fc" id="L80">		String especieQ = safeCatalogParam(especie, filtroPeligroso);</span>
+<span class="fc" id="L81">		String razaQ = safeCatalogParam(raza, filtroPeligroso);</span>
+<span class="fc" id="L82">		String ubicacionQ = safeCatalogParam(ubicacion, filtroPeligroso);</span>
+<span class="fc" id="L83">		String generoQ = safeCatalogParam(genero, filtroPeligroso);</span>
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">		if (filtroPeligroso[0]) {</span>
+<span class="nc" id="L85">			model.addAttribute(&quot;filtroSeguridadAviso&quot;, FILTRO_SEGURIDAD_AVISO);</span>
+		}
+		try {
+<span class="pc" id="L88">			List&lt;AnimalDto&gt; animales = backendApiClient.listarAnimales(</span>
+<span class="fc" id="L89">					especieQ, razaQ, ubicacionQ, edadMin, edadMax, generoQ, &quot;DISPONIBLE&quot;);</span>
+<span class="nc" id="L90">			model.addAttribute(&quot;animales&quot;, animales);</span>
+<span class="nc" id="L91">			model.addAttribute(&quot;filtroEspecie&quot;, especieQ);</span>
+<span class="nc" id="L92">			model.addAttribute(&quot;filtroRaza&quot;, razaQ);</span>
+<span class="nc" id="L93">			model.addAttribute(&quot;filtroUbicacion&quot;, ubicacionQ);</span>
+<span class="nc" id="L94">			model.addAttribute(&quot;filtroEdadMin&quot;, edadMin);</span>
+<span class="nc" id="L95">			model.addAttribute(&quot;filtroEdadMax&quot;, edadMax);</span>
+<span class="nc" id="L96">			model.addAttribute(&quot;filtroGenero&quot;, generoQ);</span>
+<span class="nc" id="L97">			model.addAttribute(&quot;filtroEstadoAdopcion&quot;, &quot;DISPONIBLE&quot;);</span>
+<span class="nc" id="L98">		}</span>
+<span class="fc" id="L99">		catch (RestClientException e) {</span>
+<span class="fc" id="L100">			model.addAttribute(&quot;animales&quot;, List.&lt;AnimalDto&gt;of());</span>
+<span class="fc" id="L101">			model.addAttribute(</span>
+<span class="fc" id="L102">					&quot;backendError&quot;,</span>
+<span class="fc" id="L103">					&quot;No se pudo conectar con el API. Asegúrese de que el backend esté en ejecución (puerto 8080) y MySQL disponible.&quot;);</span>
+		}
+<span class="fc" id="L105">		model.addAttribute(&quot;tituloCatalogo&quot;, &quot;Mascotas disponibles para adopción&quot;);</span>
+<span class="fc" id="L106">		model.addAttribute(&quot;soloDisponibles&quot;, true);</span>
+<span class="fc" id="L107">		model.addAttribute(&quot;filterFormAction&quot;, &quot;/adopciones/disponibles&quot;);</span>
+<span class="fc" id="L108">		return &quot;index&quot;;</span>
+	}
+
+	/**
+	 * Devuelve el texto recortado para el API o {@code null}; si el cliente envió marcado peligroso, marca el flag y devuelve {@code null}.
+	 */
+	private static String safeCatalogParam(String raw, boolean[] anyDangerous) {
+<span class="pc bpc" id="L115" title="1 of 4 branches missed.">		if (raw == null || raw.isBlank()) {</span>
+<span class="fc" id="L116">			return null;</span>
+		}
+<span class="fc" id="L118">		String t = raw.trim();</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">		if (InputSafety.containsDangerousMarkup(t)) {</span>
+<span class="fc" id="L120">			anyDangerous[0] = true;</span>
+<span class="fc" id="L121">			return null;</span>
+		}
+<span class="nc" id="L123">		return t;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

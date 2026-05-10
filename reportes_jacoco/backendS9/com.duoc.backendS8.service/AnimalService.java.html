@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AnimalService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.backendS8.service</a> &gt; <span class="el_source">AnimalService.java</span></div><h1>AnimalService.java</h1><pre class="source lang-java linenums">package com.duoc.backendS8.service;
+
+import java.util.List;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import com.duoc.backendS8.dto.AnimalRequest;
+import com.duoc.backendS8.dto.AnimalResponse;
+import com.duoc.backendS8.entity.Animal;
+import com.duoc.backendS8.entity.Dueno;
+import com.duoc.backendS8.entity.EstadoAdopcion;
+import com.duoc.backendS8.entity.GeneroAnimal;
+import com.duoc.backendS8.repository.AnimalRepository;
+import com.duoc.backendS8.repository.AnimalSpecifications;
+import com.duoc.backendS8.repository.DuenoRepository;
+
+@Service
+public class AnimalService {
+
+	private final AnimalRepository animalRepository;
+	private final DuenoRepository duenoRepository;
+
+<span class="fc" id="L28">	public AnimalService(AnimalRepository animalRepository, DuenoRepository duenoRepository) {</span>
+<span class="fc" id="L29">		this.animalRepository = animalRepository;</span>
+<span class="fc" id="L30">		this.duenoRepository = duenoRepository;</span>
+<span class="fc" id="L31">	}</span>
+
+	@Transactional(readOnly = true)
+	public List&lt;AnimalResponse&gt; buscar(
+			String especie,
+			String raza,
+			String ubicacion,
+			Integer edadMin,
+			Integer edadMax,
+			GeneroAnimal genero,
+			EstadoAdopcion estadoAdopcion) {
+<span class="fc" id="L42">		Specification&lt;Animal&gt; spec = AnimalSpecifications.conFiltros(</span>
+<span class="fc" id="L43">				especie, raza, ubicacion, edadMin, edadMax, genero, estadoAdopcion);</span>
+<span class="fc" id="L44">		return animalRepository.findAll(spec, Sort.by(&quot;nombre&quot;)).stream().map(this::toResponse).toList();</span>
+	}
+
+	@Transactional(readOnly = true)
+	public AnimalResponse obtenerPorId(Long id) {
+<span class="fc" id="L49">		return animalRepository.findById(id)</span>
+<span class="fc" id="L50">				.map(this::toResponse)</span>
+<span class="fc" id="L51">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Animal no encontrado&quot;));</span>
+	}
+
+	@Transactional
+	public AnimalResponse crear(AnimalRequest request) {
+<span class="fc" id="L56">		Animal animal = new Animal();</span>
+<span class="fc" id="L57">		aplicar(animal, request);</span>
+<span class="fc" id="L58">		return toResponse(animalRepository.save(animal));</span>
+	}
+
+	@Transactional
+	public AnimalResponse actualizar(Long id, AnimalRequest request) {
+<span class="nc" id="L63">		Animal animal = animalRepository.findById(id)</span>
+<span class="nc" id="L64">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Animal no encontrado&quot;));</span>
+<span class="nc" id="L65">		aplicar(animal, request);</span>
+<span class="nc" id="L66">		return toResponse(animalRepository.save(animal));</span>
+	}
+
+	@Transactional
+	public void eliminar(Long id) {
+<span class="fc bfc" id="L71" title="All 2 branches covered.">		if (!animalRepository.existsById(id)) {</span>
+<span class="fc" id="L72">			throw new EntityNotFoundException(&quot;Animal no encontrado&quot;);</span>
+		}
+<span class="fc" id="L74">		animalRepository.deleteById(id);</span>
+<span class="fc" id="L75">	}</span>
+
+	private void aplicar(Animal animal, AnimalRequest request) {
+<span class="fc" id="L78">		animal.setNombre(request.nombre().trim());</span>
+<span class="fc" id="L79">		animal.setEspecie(trim(request.especie()));</span>
+<span class="fc" id="L80">		animal.setRaza(trim(request.raza()));</span>
+<span class="fc" id="L81">		animal.setEdad(request.edad());</span>
+<span class="fc" id="L82">		animal.setUbicacion(trim(request.ubicacion()));</span>
+<span class="fc" id="L83">		animal.setGenero(request.genero());</span>
+<span class="fc" id="L84">		animal.setEstadoAdopcion(request.estadoAdopcion());</span>
+<span class="fc" id="L85">		animal.setFotoUrl(trim(request.fotoUrl()));</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">		if (request.duenoId() != null) {</span>
+<span class="fc" id="L87">			Dueno dueno = duenoRepository.findById(request.duenoId())</span>
+<span class="pc" id="L88">					.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Dueño no encontrado&quot;));</span>
+<span class="fc" id="L89">			animal.setDueno(dueno);</span>
+<span class="fc" id="L90">		}</span>
+		else {
+<span class="fc" id="L92">			animal.setDueno(null);</span>
+		}
+<span class="fc" id="L94">	}</span>
+
+	private static String trim(String s) {
+<span class="pc bpc" id="L97" title="1 of 4 branches missed.">		return s != null &amp;&amp; !s.isBlank() ? s.trim() : null;</span>
+	}
+
+	private AnimalResponse toResponse(Animal animal) {
+<span class="fc" id="L101">		Long duenoId = null;</span>
+<span class="fc" id="L102">		String duenoNombre = null;</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">		if (animal.getDueno() != null) {</span>
+<span class="fc" id="L104">			duenoId = animal.getDueno().getId();</span>
+<span class="fc" id="L105">			duenoNombre = animal.getDueno().getNombreCompleto();</span>
+		}
+<span class="fc" id="L107">		return new AnimalResponse(</span>
+<span class="fc" id="L108">				animal.getId(),</span>
+<span class="fc" id="L109">				animal.getNombre(),</span>
+<span class="fc" id="L110">				animal.getEspecie(),</span>
+<span class="fc" id="L111">				animal.getRaza(),</span>
+<span class="fc" id="L112">				animal.getEdad(),</span>
+<span class="fc" id="L113">				animal.getUbicacion(),</span>
+<span class="fc" id="L114">				animal.getGenero(),</span>
+<span class="fc" id="L115">				animal.getEstadoAdopcion(),</span>
+<span class="fc" id="L116">				animal.getFotoUrl(),</span>
+<span class="fc" id="L117">				duenoId,</span>
+<span class="fc" id="L118">				duenoNombre);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

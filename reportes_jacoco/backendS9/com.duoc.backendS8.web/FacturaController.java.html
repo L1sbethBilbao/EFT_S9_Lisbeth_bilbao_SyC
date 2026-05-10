@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FacturaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.backendS8.web</a> &gt; <span class="el_source">FacturaController.java</span></div><h1>FacturaController.java</h1><pre class="source lang-java linenums">package com.duoc.backendS8.web;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.duoc.backendS8.dto.EnviarFacturaRequest;
+import com.duoc.backendS8.dto.FacturaRequest;
+import com.duoc.backendS8.dto.FacturaResponse;
+import com.duoc.backendS8.service.FacturaService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping(&quot;/api/facturas&quot;)
+public class FacturaController {
+
+	private final FacturaService facturaService;
+
+<span class="fc" id="L26">	public FacturaController(FacturaService facturaService) {</span>
+<span class="fc" id="L27">		this.facturaService = facturaService;</span>
+<span class="fc" id="L28">	}</span>
+
+	@GetMapping
+	public List&lt;FacturaResponse&gt; listar() {
+<span class="fc" id="L32">		return facturaService.listar();</span>
+	}
+
+	@GetMapping(&quot;/{id}&quot;)
+	public FacturaResponse obtener(@PathVariable Long id) {
+<span class="fc" id="L37">		return facturaService.obtener(id);</span>
+	}
+
+	@PostMapping
+	public ResponseEntity&lt;FacturaResponse&gt; crear(@Valid @RequestBody FacturaRequest request) {
+<span class="fc" id="L42">		return ResponseEntity.status(201).body(facturaService.crear(request));</span>
+	}
+
+	@PostMapping(&quot;/{id}/enviar-correo&quot;)
+	public ResponseEntity&lt;Void&gt; enviarCorreo(@PathVariable Long id, @Valid @RequestBody EnviarFacturaRequest request) {
+<span class="fc" id="L47">		facturaService.enviarCorreo(id, request.email());</span>
+<span class="fc" id="L48">		return ResponseEntity.noContent().build();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

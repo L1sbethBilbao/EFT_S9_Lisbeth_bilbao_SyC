@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BackendApiClient.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.frontendS8.service</a> &gt; <span class="el_source">BackendApiClient.java</span></div><h1>BackendApiClient.java</h1><pre class="source lang-java linenums">package com.duoc.frontendS8.service;
+
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import com.duoc.frontendS8.dto.AnimalDto;
+import com.duoc.frontendS8.dto.AnimalForm;
+import com.duoc.frontendS8.dto.CitaForm;
+import com.duoc.frontendS8.dto.CitaDto;
+import com.duoc.frontendS8.dto.EnviarFacturaDto;
+import com.duoc.frontendS8.dto.DuenoDto;
+import com.duoc.frontendS8.dto.DuenoForm;
+import com.duoc.frontendS8.dto.FacturaDto;
+import com.duoc.frontendS8.dto.FacturaForm;
+import com.duoc.frontendS8.dto.LoginApiRequest;
+import com.duoc.frontendS8.dto.LoginApiResponse;
+import com.duoc.frontendS8.dto.RegistroMedicoDto;
+import com.duoc.frontendS8.dto.RegistroMedicoForm;
+import com.duoc.frontendS8.dto.SessionUsuarioDto;
+import com.duoc.frontendS8.dto.SolicitudAdopcionApiRequest;
+import com.duoc.frontendS8.dto.SolicitudAdopcionCreadaDto;
+import com.duoc.frontendS8.dto.SolicitudAdopcionDetalleDto;
+import com.duoc.frontendS8.dto.SolicitudDatosPatchApiRequest;
+import com.duoc.frontendS8.dto.SolicitudAdopcionListItemDto;
+import com.duoc.frontendS8.dto.MensajeCoordinadorApiRequest;
+import com.duoc.frontendS8.dto.MensajeSeguimientoApiRequest;
+import com.duoc.frontendS8.dto.SolicitudSeguimientoVistaDto;
+import com.duoc.frontendS8.dto.EstadoSolicitudApiPatch;
+import com.duoc.frontendS8.dto.VeterinarioDto;
+import com.duoc.frontendS8.dto.VeterinarioForm;
+import com.duoc.frontendS8.exception.BackendUnavailableException;
+
+@Service
+public class BackendApiClient {
+
+	public static final String SESSION_JWT = &quot;JWT_TOKEN&quot;;
+
+	private final RestTemplate restTemplate;
+	private final String baseUrl;
+
+<span class="fc" id="L57">	public BackendApiClient(RestTemplate restTemplate, @Value(&quot;${app.backend.base-url}&quot;) String baseUrl) {</span>
+<span class="fc" id="L58">		this.restTemplate = restTemplate;</span>
+<span class="fc" id="L59">		this.baseUrl = baseUrl.replaceAll(&quot;/$&quot;, &quot;&quot;);</span>
+<span class="fc" id="L60">	}</span>
+
+	public List&lt;AnimalDto&gt; listarAnimales(
+			String especie,
+			String raza,
+			String ubicacion,
+			Integer edadMin,
+			Integer edadMax,
+			String genero,
+			String estadoAdopcion) {
+<span class="fc" id="L70">		UriComponentsBuilder b = UriComponentsBuilder.fromUriString(baseUrl + &quot;/api/animales&quot;);</span>
+<span class="pc bpc" id="L71" title="1 of 4 branches missed.">		if (especie != null &amp;&amp; !especie.isBlank()) {</span>
+<span class="fc" id="L72">			b.queryParam(&quot;especie&quot;, especie.trim());</span>
+		}
+<span class="pc bpc" id="L74" title="1 of 4 branches missed.">		if (raza != null &amp;&amp; !raza.isBlank()) {</span>
+<span class="fc" id="L75">			b.queryParam(&quot;raza&quot;, raza.trim());</span>
+		}
+<span class="pc bpc" id="L77" title="1 of 4 branches missed.">		if (ubicacion != null &amp;&amp; !ubicacion.isBlank()) {</span>
+<span class="fc" id="L78">			b.queryParam(&quot;ubicacion&quot;, ubicacion.trim());</span>
+		}
+<span class="fc bfc" id="L80" title="All 2 branches covered.">		if (edadMin != null) {</span>
+<span class="fc" id="L81">			b.queryParam(&quot;edadMin&quot;, edadMin);</span>
+		}
+<span class="fc bfc" id="L83" title="All 2 branches covered.">		if (edadMax != null) {</span>
+<span class="fc" id="L84">			b.queryParam(&quot;edadMax&quot;, edadMax);</span>
+		}
+<span class="pc bpc" id="L86" title="1 of 4 branches missed.">		if (genero != null &amp;&amp; !genero.isBlank()) {</span>
+<span class="fc" id="L87">			b.queryParam(&quot;genero&quot;, genero.trim());</span>
+		}
+<span class="pc bpc" id="L89" title="1 of 4 branches missed.">		if (estadoAdopcion != null &amp;&amp; !estadoAdopcion.isBlank()) {</span>
+<span class="fc" id="L90">			b.queryParam(&quot;estadoAdopcion&quot;, estadoAdopcion.trim());</span>
+		}
+<span class="fc" id="L92">		URI uri = b.encode().build().toUri();</span>
+<span class="fc" id="L93">		ResponseEntity&lt;List&lt;AnimalDto&gt;&gt; response = restTemplate.exchange(</span>
+<span class="fc" id="L94">				uri,</span>
+<span class="fc" id="L95">				HttpMethod.GET,</span>
+<span class="fc" id="L96">				null,</span>
+<span class="fc" id="L97">				new ParameterizedTypeReference&lt;List&lt;AnimalDto&gt;&gt;() {</span>
+				});
+<span class="fc" id="L99">		List&lt;AnimalDto&gt; body = response.getBody();</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">		return body != null ? body : Collections.emptyList();</span>
+	}
+
+	public AnimalDto obtenerAnimal(Long id) {
+<span class="fc" id="L104">		return restTemplate.getForObject(baseUrl + &quot;/api/animales/&quot; + id, AnimalDto.class);</span>
+	}
+
+	public LoginApiResponse login(String username, String password) {
+<span class="fc" id="L108">		var body = new LoginApiRequest(username, password);</span>
+		try {
+<span class="fc" id="L110">			return restTemplate.postForObject(baseUrl + &quot;/api/auth/login&quot;, body, LoginApiResponse.class);</span>
+		}
+<span class="fc" id="L112">		catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">			if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {</span>
+<span class="fc" id="L114">				return null;</span>
+			}
+<span class="fc" id="L116">			throw e;</span>
+		}
+<span class="fc" id="L118">		catch (RestClientException e) {</span>
+<span class="fc" id="L119">			throw new BackendUnavailableException(</span>
+<span class="fc" id="L120">					&quot;No se pudo conectar con el API en &quot; + baseUrl + &quot;. ¿Está el backend (puerto 8080) y MySQL en ejecución?&quot;,</span>
+<span class="fc" id="L121">					e);</span>
+		}
+	}
+
+	public void crearAnimal(String jwt, AnimalForm form) {
+<span class="fc" id="L126">		HttpEntity&lt;AnimalForm&gt; entity = new HttpEntity&lt;&gt;(form, jsonHeaders(jwt));</span>
+<span class="fc" id="L127">		restTemplate.postForEntity(baseUrl + &quot;/api/animales&quot;, entity, AnimalDto.class);</span>
+<span class="fc" id="L128">	}</span>
+
+	public void actualizarAnimal(String jwt, Long id, AnimalForm form) {
+<span class="fc" id="L131">		HttpEntity&lt;AnimalForm&gt; entity = new HttpEntity&lt;&gt;(form, jsonHeaders(jwt));</span>
+<span class="fc" id="L132">		restTemplate.exchange(baseUrl + &quot;/api/animales/&quot; + id, HttpMethod.PUT, entity, Void.class);</span>
+<span class="fc" id="L133">	}</span>
+
+	public void eliminarAnimal(String jwt, Long id) {
+<span class="fc" id="L136">		HttpEntity&lt;Void&gt; entity = new HttpEntity&lt;&gt;(bearerOnly(jwt));</span>
+<span class="fc" id="L137">		ResponseEntity&lt;Void&gt; response = restTemplate.exchange(</span>
+<span class="fc" id="L138">				baseUrl + &quot;/api/animales/&quot; + id,</span>
+<span class="fc" id="L139">				HttpMethod.DELETE,</span>
+<span class="fc" id="L140">				entity,</span>
+<span class="fc" id="L141">				Void.class);</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">		if (!response.getStatusCode().is2xxSuccessful()) {</span>
+<span class="fc" id="L143">			throw new IllegalStateException(&quot;No se pudo eliminar el animal&quot;);</span>
+		}
+<span class="fc" id="L145">	}</span>
+
+	public List&lt;DuenoDto&gt; listarDuenos(String jwt) {
+<span class="fc" id="L148">		DuenoDto[] data = restTemplate.exchange(</span>
+<span class="fc" id="L149">				baseUrl + &quot;/api/duenos&quot;,</span>
+<span class="fc" id="L150">				HttpMethod.GET,</span>
+<span class="fc" id="L151">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L152">				DuenoDto[].class).getBody();</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">		if (data == null) {</span>
+<span class="nc" id="L154">			return Collections.emptyList();</span>
+		}
+<span class="fc" id="L156">		return Arrays.asList(data);</span>
+	}
+
+	public void crearDueno(String jwt, DuenoForm form) {
+<span class="fc" id="L160">		restTemplate.postForEntity(baseUrl + &quot;/api/duenos&quot;, new HttpEntity&lt;&gt;(form, jsonHeaders(jwt)), DuenoDto.class);</span>
+<span class="fc" id="L161">	}</span>
+
+	public void actualizarDueno(String jwt, Long id, DuenoForm form) {
+<span class="fc" id="L164">		restTemplate.exchange(baseUrl + &quot;/api/duenos/&quot; + id, HttpMethod.PUT, new HttpEntity&lt;&gt;(form, jsonHeaders(jwt)), Void.class);</span>
+<span class="fc" id="L165">	}</span>
+
+	public void eliminarDueno(String jwt, Long id) {
+<span class="fc" id="L168">		restTemplate.exchange(baseUrl + &quot;/api/duenos/&quot; + id, HttpMethod.DELETE, new HttpEntity&lt;&gt;(bearerOnly(jwt)), Void.class);</span>
+<span class="fc" id="L169">	}</span>
+
+	public List&lt;VeterinarioDto&gt; listarVeterinarios(String jwt) {
+<span class="fc" id="L172">		VeterinarioDto[] data = restTemplate.exchange(</span>
+<span class="fc" id="L173">				baseUrl + &quot;/api/veterinarios&quot;,</span>
+<span class="fc" id="L174">				HttpMethod.GET,</span>
+<span class="fc" id="L175">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L176">				VeterinarioDto[].class).getBody();</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">		if (data == null) {</span>
+<span class="nc" id="L178">			return Collections.emptyList();</span>
+		}
+<span class="fc" id="L180">		return Arrays.asList(data);</span>
+	}
+
+	public List&lt;VeterinarioDto&gt; listarVeterinariosActivos(String jwt) {
+<span class="fc" id="L184">		VeterinarioDto[] data = restTemplate.exchange(</span>
+<span class="fc" id="L185">				baseUrl + &quot;/api/veterinarios/activos&quot;,</span>
+<span class="fc" id="L186">				HttpMethod.GET,</span>
+<span class="fc" id="L187">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L188">				VeterinarioDto[].class).getBody();</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">		if (data == null) {</span>
+<span class="nc" id="L190">			return Collections.emptyList();</span>
+		}
+<span class="fc" id="L192">		return Arrays.asList(data);</span>
+	}
+
+	public void crearVeterinario(String jwt, VeterinarioForm form) {
+<span class="fc" id="L196">		restTemplate.postForEntity(baseUrl + &quot;/api/veterinarios&quot;, new HttpEntity&lt;&gt;(form, jsonHeaders(jwt)), VeterinarioDto.class);</span>
+<span class="fc" id="L197">	}</span>
+
+	public void actualizarVeterinario(String jwt, Long id, VeterinarioForm form) {
+<span class="fc" id="L200">		restTemplate.exchange(</span>
+<span class="fc" id="L201">				baseUrl + &quot;/api/veterinarios/&quot; + id,</span>
+<span class="fc" id="L202">				HttpMethod.PUT,</span>
+<span class="fc" id="L203">				new HttpEntity&lt;&gt;(form, jsonHeaders(jwt)),</span>
+<span class="fc" id="L204">				Void.class);</span>
+<span class="fc" id="L205">	}</span>
+
+	public void eliminarVeterinario(String jwt, Long id) {
+<span class="fc" id="L208">		restTemplate.exchange(</span>
+<span class="fc" id="L209">				baseUrl + &quot;/api/veterinarios/&quot; + id,</span>
+<span class="fc" id="L210">				HttpMethod.DELETE,</span>
+<span class="fc" id="L211">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L212">				Void.class);</span>
+<span class="fc" id="L213">	}</span>
+
+	public SessionUsuarioDto obtenerSesion(String jwt) {
+<span class="fc" id="L216">		return restTemplate.exchange(</span>
+<span class="fc" id="L217">				baseUrl + &quot;/api/auth/me&quot;,</span>
+<span class="fc" id="L218">				HttpMethod.GET,</span>
+<span class="fc" id="L219">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L220">				SessionUsuarioDto.class).getBody();</span>
+	}
+
+	public List&lt;CitaDto&gt; listarCitas(String jwt) {
+<span class="fc" id="L224">		CitaDto[] data = restTemplate.exchange(</span>
+<span class="fc" id="L225">				baseUrl + &quot;/api/citas&quot;,</span>
+<span class="fc" id="L226">				HttpMethod.GET,</span>
+<span class="fc" id="L227">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L228">				CitaDto[].class).getBody();</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">		if (data == null) {</span>
+<span class="nc" id="L230">			return Collections.emptyList();</span>
+		}
+<span class="fc" id="L232">		return Arrays.asList(data);</span>
+	}
+
+	public CitaDto obtenerCita(String jwt, Long id) {
+<span class="fc" id="L236">		return restTemplate.exchange(</span>
+<span class="fc" id="L237">				baseUrl + &quot;/api/citas/&quot; + id,</span>
+<span class="fc" id="L238">				HttpMethod.GET,</span>
+<span class="fc" id="L239">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L240">				CitaDto.class).getBody();</span>
+	}
+
+	public void crearCita(String jwt, CitaForm form) {
+<span class="fc" id="L244">		restTemplate.postForEntity(baseUrl + &quot;/api/citas&quot;, new HttpEntity&lt;&gt;(form, jsonHeaders(jwt)), CitaDto.class);</span>
+<span class="fc" id="L245">	}</span>
+
+	public void cancelarCita(String jwt, Long id) {
+<span class="fc" id="L248">		restTemplate.exchange(baseUrl + &quot;/api/citas/&quot; + id, HttpMethod.DELETE, new HttpEntity&lt;&gt;(bearerOnly(jwt)), Void.class);</span>
+<span class="fc" id="L249">	}</span>
+
+	public List&lt;RegistroMedicoDto&gt; listarRegistrosMedicos(String jwt) {
+<span class="fc" id="L252">		RegistroMedicoDto[] data = restTemplate.exchange(</span>
+<span class="fc" id="L253">				baseUrl + &quot;/api/registros-medicos&quot;,</span>
+<span class="fc" id="L254">				HttpMethod.GET,</span>
+<span class="fc" id="L255">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L256">				RegistroMedicoDto[].class).getBody();</span>
+<span class="pc bpc" id="L257" title="1 of 2 branches missed.">		if (data == null) {</span>
+<span class="nc" id="L258">			return Collections.emptyList();</span>
+		}
+<span class="fc" id="L260">		return Arrays.asList(data);</span>
+	}
+
+	public void crearRegistroMedico(String jwt, RegistroMedicoForm form) {
+<span class="fc" id="L264">		restTemplate.postForEntity(</span>
+<span class="fc" id="L265">				baseUrl + &quot;/api/registros-medicos&quot;,</span>
+<span class="fc" id="L266">				new HttpEntity&lt;&gt;(form, jsonHeaders(jwt)),</span>
+<span class="fc" id="L267">				RegistroMedicoDto.class);</span>
+<span class="fc" id="L268">	}</span>
+
+	/** Obtiene un registro por id; devuelve null si no existe o falla la llamada. */
+	public RegistroMedicoDto obtenerRegistroMedico(String jwt, Long id) {
+		try {
+<span class="pc" id="L273">			return restTemplate.exchange(</span>
+<span class="fc" id="L274">					baseUrl + &quot;/api/registros-medicos/&quot; + id,</span>
+<span class="fc" id="L275">					HttpMethod.GET,</span>
+<span class="fc" id="L276">					new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="pc" id="L277">					RegistroMedicoDto.class).getBody();</span>
+<span class="fc" id="L278">		} catch (HttpClientErrorException.NotFound e) {</span>
+<span class="fc" id="L279">			return null;</span>
+<span class="fc" id="L280">		} catch (RestClientException e) {</span>
+<span class="fc" id="L281">			return null;</span>
+		}
+	}
+
+	public List&lt;FacturaDto&gt; listarFacturas(String jwt) {
+<span class="fc" id="L286">		FacturaDto[] data = restTemplate.exchange(</span>
+<span class="fc" id="L287">				baseUrl + &quot;/api/facturas&quot;,</span>
+<span class="fc" id="L288">				HttpMethod.GET,</span>
+<span class="fc" id="L289">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L290">				FacturaDto[].class).getBody();</span>
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">		if (data == null) {</span>
+<span class="nc" id="L292">			return Collections.emptyList();</span>
+		}
+<span class="fc" id="L294">		return Arrays.asList(data);</span>
+	}
+
+	public FacturaDto obtenerFactura(String jwt, Long id) {
+<span class="fc" id="L298">		return restTemplate.exchange(</span>
+<span class="fc" id="L299">				baseUrl + &quot;/api/facturas/&quot; + id,</span>
+<span class="fc" id="L300">				HttpMethod.GET,</span>
+<span class="fc" id="L301">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L302">				FacturaDto.class).getBody();</span>
+	}
+
+	public void crearFactura(String jwt, FacturaForm form) {
+<span class="fc" id="L306">		restTemplate.postForEntity(baseUrl + &quot;/api/facturas&quot;, new HttpEntity&lt;&gt;(form, jsonHeaders(jwt)), FacturaDto.class);</span>
+<span class="fc" id="L307">	}</span>
+
+	public void enviarFacturaCorreo(String jwt, Long facturaId, String email) {
+<span class="fc" id="L310">		var body = new EnviarFacturaDto(email);</span>
+<span class="fc" id="L311">		restTemplate.postForEntity(</span>
+<span class="fc" id="L312">				baseUrl + &quot;/api/facturas/&quot; + facturaId + &quot;/enviar-correo&quot;,</span>
+<span class="fc" id="L313">				new HttpEntity&lt;&gt;(body, jsonHeaders(jwt)),</span>
+<span class="fc" id="L314">				Void.class);</span>
+<span class="fc" id="L315">	}</span>
+
+	public SolicitudAdopcionCreadaDto crearSolicitudAdopcionPublica(SolicitudAdopcionApiRequest body) {
+<span class="fc" id="L318">		HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L319">		headers.setContentType(MediaType.APPLICATION_JSON);</span>
+<span class="fc" id="L320">		return restTemplate.postForObject(</span>
+<span class="fc" id="L321">				baseUrl + &quot;/api/adopciones/solicitudes&quot;,</span>
+<span class="fc" id="L322">				new HttpEntity&lt;&gt;(body, headers),</span>
+<span class="fc" id="L323">				SolicitudAdopcionCreadaDto.class);</span>
+	}
+
+	public void enviarMensajeSeguimientoAdopcion(String codigoSeguimiento, String cuerpo) {
+<span class="fc" id="L327">		var body = new MensajeSeguimientoApiRequest(codigoSeguimiento.trim(), cuerpo.trim());</span>
+<span class="fc" id="L328">		HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L329">		headers.setContentType(MediaType.APPLICATION_JSON);</span>
+<span class="fc" id="L330">		restTemplate.postForEntity(</span>
+<span class="fc" id="L331">				baseUrl + &quot;/api/adopciones/seguimiento/mensajes&quot;,</span>
+<span class="fc" id="L332">				new HttpEntity&lt;&gt;(body, headers),</span>
+<span class="fc" id="L333">				Void.class);</span>
+<span class="fc" id="L334">	}</span>
+
+	/**
+	 * Consulta pública por código (sin JWT). Devuelve null si el código no existe.
+	 */
+	public SolicitudSeguimientoVistaDto consultarSeguimientoPublico(String codigo) {
+<span class="fc bfc" id="L340" title="All 4 branches covered.">		if (codigo == null || codigo.isBlank()) {</span>
+<span class="fc" id="L341">			return null;</span>
+		}
+<span class="fc" id="L343">		URI uri = UriComponentsBuilder.fromUriString(baseUrl + &quot;/api/adopciones/seguimiento/consulta&quot;)</span>
+<span class="fc" id="L344">				.queryParam(&quot;codigo&quot;, codigo.trim())</span>
+<span class="fc" id="L345">				.encode()</span>
+<span class="fc" id="L346">				.build()</span>
+<span class="fc" id="L347">				.toUri();</span>
+		try {
+<span class="fc" id="L349">			return restTemplate.getForObject(uri, SolicitudSeguimientoVistaDto.class);</span>
+		}
+<span class="fc" id="L351">		catch (HttpClientErrorException.NotFound e) {</span>
+<span class="fc" id="L352">			return null;</span>
+		}
+	}
+
+	public List&lt;SolicitudAdopcionListItemDto&gt; listarSolicitudesAdopcion(String jwt) {
+<span class="fc" id="L357">		SolicitudAdopcionListItemDto[] data = restTemplate.exchange(</span>
+<span class="fc" id="L358">				baseUrl + &quot;/api/adopciones/solicitudes&quot;,</span>
+<span class="fc" id="L359">				HttpMethod.GET,</span>
+<span class="fc" id="L360">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L361">				SolicitudAdopcionListItemDto[].class).getBody();</span>
+<span class="pc bpc" id="L362" title="1 of 2 branches missed.">		if (data == null) {</span>
+<span class="nc" id="L363">			return Collections.emptyList();</span>
+		}
+<span class="fc" id="L365">		return Arrays.asList(data);</span>
+	}
+
+	public SolicitudAdopcionDetalleDto obtenerSolicitudAdopcion(String jwt, Long id) {
+<span class="fc" id="L369">		return restTemplate.exchange(</span>
+<span class="fc" id="L370">				baseUrl + &quot;/api/adopciones/solicitudes/&quot; + id,</span>
+<span class="fc" id="L371">				HttpMethod.GET,</span>
+<span class="fc" id="L372">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L373">				SolicitudAdopcionDetalleDto.class).getBody();</span>
+	}
+
+	public void coordinadorEnviarMensajeAdopcion(String jwt, Long solicitudId, String cuerpo) {
+<span class="fc" id="L377">		restTemplate.postForEntity(</span>
+<span class="fc" id="L378">				baseUrl + &quot;/api/adopciones/solicitudes/&quot; + solicitudId + &quot;/mensajes&quot;,</span>
+<span class="fc" id="L379">				new HttpEntity&lt;&gt;(new MensajeCoordinadorApiRequest(cuerpo.trim()), jsonHeaders(jwt)),</span>
+<span class="fc" id="L380">				Void.class);</span>
+<span class="fc" id="L381">	}</span>
+
+	public void coordinadorActualizarEstadoSolicitud(String jwt, Long solicitudId, String estado) {
+<span class="fc" id="L384">		restTemplate.exchange(</span>
+<span class="fc" id="L385">				baseUrl + &quot;/api/adopciones/solicitudes/&quot; + solicitudId + &quot;/estado&quot;,</span>
+<span class="fc" id="L386">				HttpMethod.PATCH,</span>
+<span class="fc" id="L387">				new HttpEntity&lt;&gt;(new EstadoSolicitudApiPatch(estado), jsonHeaders(jwt)),</span>
+<span class="fc" id="L388">				Void.class);</span>
+<span class="fc" id="L389">	}</span>
+
+	public void eliminarSolicitudAdopcion(String jwt, Long id) {
+<span class="fc" id="L392">		restTemplate.exchange(</span>
+<span class="fc" id="L393">				baseUrl + &quot;/api/adopciones/solicitudes/&quot; + id,</span>
+<span class="fc" id="L394">				HttpMethod.DELETE,</span>
+<span class="fc" id="L395">				new HttpEntity&lt;&gt;(bearerOnly(jwt)),</span>
+<span class="fc" id="L396">				Void.class);</span>
+<span class="fc" id="L397">	}</span>
+
+	public void coordinadorActualizarDatosSolicitud(String jwt, Long id, SolicitudDatosPatchApiRequest body) {
+<span class="fc" id="L400">		restTemplate.exchange(</span>
+<span class="fc" id="L401">				baseUrl + &quot;/api/adopciones/solicitudes/&quot; + id + &quot;/datos&quot;,</span>
+<span class="fc" id="L402">				HttpMethod.PATCH,</span>
+<span class="fc" id="L403">				new HttpEntity&lt;&gt;(body, jsonHeaders(jwt)),</span>
+<span class="fc" id="L404">				Void.class);</span>
+<span class="fc" id="L405">	}</span>
+
+	private static HttpHeaders jsonHeaders(String jwt) {
+<span class="fc" id="L408">		HttpHeaders headers = bearerOnly(jwt);</span>
+<span class="fc" id="L409">		headers.setContentType(MediaType.APPLICATION_JSON);</span>
+<span class="fc" id="L410">		return headers;</span>
+	}
+
+	private static HttpHeaders bearerOnly(String jwt) {
+<span class="fc" id="L414">		HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L415">		headers.setBearerAuth(jwt);</span>
+<span class="fc" id="L416">		return headers;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

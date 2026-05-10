@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegistroMedicoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.backendS8.service</a> &gt; <span class="el_source">RegistroMedicoService.java</span></div><h1>RegistroMedicoService.java</h1><pre class="source lang-java linenums">package com.duoc.backendS8.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import com.duoc.backendS8.dto.RegistroMedicoRequest;
+import com.duoc.backendS8.dto.RegistroMedicoResponse;
+import com.duoc.backendS8.entity.Cita;
+import com.duoc.backendS8.entity.EstadoCita;
+import com.duoc.backendS8.entity.RegistroMedico;
+import com.duoc.backendS8.repository.CitaRepository;
+import com.duoc.backendS8.repository.RegistroMedicoRepository;
+
+@Service
+public class RegistroMedicoService {
+
+	private final RegistroMedicoRepository registroMedicoRepository;
+	private final CitaRepository citaRepository;
+
+<span class="fc" id="L24">	public RegistroMedicoService(</span>
+			RegistroMedicoRepository registroMedicoRepository,
+			CitaRepository citaRepository) {
+<span class="fc" id="L27">		this.registroMedicoRepository = registroMedicoRepository;</span>
+<span class="fc" id="L28">		this.citaRepository = citaRepository;</span>
+<span class="fc" id="L29">	}</span>
+
+	@Transactional(readOnly = true)
+	public List&lt;RegistroMedicoResponse&gt; listar() {
+<span class="fc" id="L33">		return registroMedicoRepository.findAll().stream().map(this::toResponse).toList();</span>
+	}
+
+	@Transactional(readOnly = true)
+	public RegistroMedicoResponse obtener(Long id) {
+<span class="nc" id="L38">		return registroMedicoRepository.findById(id).map(this::toResponse)</span>
+<span class="nc" id="L39">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Registro médico no encontrado&quot;));</span>
+	}
+
+	@Transactional
+	public RegistroMedicoResponse crear(RegistroMedicoRequest request) {
+<span class="fc" id="L44">		Cita cita = citaRepository.findById(request.citaId())</span>
+<span class="pc" id="L45">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Cita no encontrada&quot;));</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">		if (cita.getEstado() != EstadoCita.PROGRAMADA) {</span>
+<span class="fc" id="L47">			throw new IllegalStateException(&quot;Solo se puede registrar atención en citas en estado PROGRAMADA&quot;);</span>
+		}
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">		if (registroMedicoRepository.findByCita_Id(cita.getId()).isPresent()) {</span>
+<span class="nc" id="L50">			throw new IllegalStateException(&quot;Ya existe una ficha para esta cita&quot;);</span>
+		}
+<span class="fc" id="L52">		RegistroMedico rm = RegistroMedico.builder()</span>
+<span class="fc" id="L53">				.cita(cita)</span>
+<span class="fc" id="L54">				.fechaAtencion(request.fechaAtencion())</span>
+<span class="fc" id="L55">				.diagnostico(request.diagnostico().trim())</span>
+<span class="fc" id="L56">				.tratamiento(trim(request.tratamiento()))</span>
+<span class="fc" id="L57">				.medicamentos(trim(request.medicamentos()))</span>
+<span class="fc" id="L58">				.notas(trim(request.notas()))</span>
+<span class="fc" id="L59">				.build();</span>
+<span class="fc" id="L60">		cita.setEstado(EstadoCita.COMPLETADA);</span>
+<span class="fc" id="L61">		RegistroMedico guardado = registroMedicoRepository.save(rm);</span>
+<span class="fc" id="L62">		return toResponse(guardado);</span>
+	}
+
+	private RegistroMedicoResponse toResponse(RegistroMedico rm) {
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">		Long facturaId = rm.getFactura() != null ? rm.getFactura().getId() : null;</span>
+<span class="fc" id="L67">		return new RegistroMedicoResponse(</span>
+<span class="fc" id="L68">				rm.getId(),</span>
+<span class="fc" id="L69">				rm.getCita().getId(),</span>
+<span class="fc" id="L70">				rm.getFechaAtencion(),</span>
+<span class="fc" id="L71">				rm.getDiagnostico(),</span>
+<span class="fc" id="L72">				rm.getTratamiento(),</span>
+<span class="fc" id="L73">				rm.getMedicamentos(),</span>
+<span class="fc" id="L74">				rm.getNotas(),</span>
+<span class="fc" id="L75">				facturaId);</span>
+	}
+
+	private static String trim(String s) {
+<span class="pc bpc" id="L79" title="1 of 4 branches missed.">		return s != null &amp;&amp; !s.isBlank() ? s.trim() : null;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

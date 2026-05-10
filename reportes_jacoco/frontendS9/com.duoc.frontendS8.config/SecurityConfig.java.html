@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.frontendS8.config</a> &gt; <span class="el_source">SecurityConfig.java</span></div><h1>SecurityConfig.java</h1><pre class="source lang-java linenums">package com.duoc.frontendS8.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue;
+
+@Configuration
+@EnableWebSecurity
+<span class="fc" id="L16">public class SecurityConfig {</span>
+
+	/**
+	 * Directivas separadas con ';' (gramática CSP). Antes estaban unidas solo con espacios y ZAP/navegadores
+	 * interpretaban mal la política (duplicados, error con 'none', falsos &quot;CSP no configurada&quot;).
+	 * img-src y font-src solo 'self': sin data:/https: amplios (ZAP 10055 “Directiva Wildcard”).
+	 */
+<span class="fc" id="L23">	private static final String CSP_DIRECTIVES = String.join(&quot;; &quot;,</span>
+<span class="fc" id="L24">			&quot;default-src 'self'&quot;,</span>
+<span class="fc" id="L25">			&quot;script-src 'self'&quot;,</span>
+<span class="fc" id="L26">			&quot;style-src 'self'&quot;,</span>
+<span class="fc" id="L27">			&quot;img-src 'self'&quot;,</span>
+<span class="fc" id="L28">			&quot;font-src 'self'&quot;,</span>
+<span class="fc" id="L29">			&quot;connect-src 'self'&quot;,</span>
+<span class="fc" id="L30">			&quot;frame-src 'none'&quot;,</span>
+<span class="fc" id="L31">			&quot;frame-ancestors 'self'&quot;,</span>
+<span class="fc" id="L32">			&quot;worker-src 'none'&quot;,</span>
+<span class="fc" id="L33">			&quot;manifest-src 'none'&quot;,</span>
+<span class="fc" id="L34">			&quot;media-src 'self'&quot;,</span>
+<span class="fc" id="L35">			&quot;base-uri 'self'&quot;,</span>
+<span class="fc" id="L36">			&quot;form-action 'self'&quot;,</span>
+<span class="fc" id="L37">			&quot;object-src 'none'&quot;);</span>
+
+	@Bean
+	CookieCsrfTokenRepository cookieCsrfTokenRepository() {
+		// HttpOnly + SameSite en la cookie CSRF (Spring Security 7: usar CookieCustomizer, no setCookieHttpOnly eliminado).
+<span class="fc" id="L42">		CookieCsrfTokenRepository repo = new CookieCsrfTokenRepository();</span>
+<span class="fc" id="L43">		repo.setCookieCustomizer(builder -&gt; builder.sameSite(&quot;Lax&quot;).httpOnly(true));</span>
+<span class="fc" id="L44">		return repo;</span>
+	}
+
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http, CookieCsrfTokenRepository cookieCsrfTokenRepository)
+			throws Exception {
+<span class="fc" id="L50">		http</span>
+<span class="fc" id="L51">				.authorizeHttpRequests(auth -&gt; auth</span>
+<span class="fc" id="L52">						.requestMatchers(</span>
+<span class="fc" id="L53">								&quot;/&quot;,</span>
+<span class="fc" id="L54">								&quot;/login&quot;,</span>
+<span class="fc" id="L55">								&quot;/logout&quot;,</span>
+<span class="fc" id="L56">								&quot;/css/**&quot;,</span>
+<span class="fc" id="L57">								&quot;/js/**&quot;,</span>
+<span class="fc" id="L58">								&quot;/error&quot;,</span>
+<span class="fc" id="L59">								&quot;/mascotas/**&quot;,</span>
+<span class="fc" id="L60">								&quot;/adopciones/disponibles&quot;,</span>
+<span class="fc" id="L61">								&quot;/adopciones/solicitar&quot;,</span>
+<span class="fc" id="L62">								&quot;/adopciones/gracias&quot;,</span>
+<span class="fc" id="L63">								&quot;/adopciones/seguimiento&quot;,</span>
+<span class="fc" id="L64">								&quot;/adopciones/seguimiento/salir&quot;).permitAll()</span>
+<span class="fc" id="L65">						.requestMatchers(HttpMethod.POST, &quot;/adopciones/solicitar&quot;, &quot;/adopciones/seguimiento/mensaje&quot;).permitAll()</span>
+<span class="fc" id="L66">						.requestMatchers(&quot;/adopciones/gestion&quot;, &quot;/adopciones/gestion/**&quot;).hasRole(&quot;COORDINADOR&quot;)</span>
+<span class="fc" id="L67">						.requestMatchers(&quot;/animales/**&quot;).hasAnyRole(&quot;COORDINADOR&quot;, &quot;GESTOR&quot;)</span>
+<span class="fc" id="L68">						.requestMatchers(&quot;/duenos/**&quot;).hasAnyRole(&quot;COORDINADOR&quot;, &quot;GESTOR&quot;)</span>
+<span class="fc" id="L69">						.requestMatchers(&quot;/veterinarios/nuevo&quot;).hasRole(&quot;COORDINADOR&quot;)</span>
+<span class="fc" id="L70">						.requestMatchers(&quot;/veterinarios/*/editar&quot;).hasRole(&quot;COORDINADOR&quot;)</span>
+<span class="fc" id="L71">						.requestMatchers(HttpMethod.POST, &quot;/veterinarios&quot;).hasRole(&quot;COORDINADOR&quot;)</span>
+<span class="fc" id="L72">						.requestMatchers(HttpMethod.POST, &quot;/veterinarios/*/actualizar&quot;).hasRole(&quot;COORDINADOR&quot;)</span>
+<span class="fc" id="L73">						.requestMatchers(HttpMethod.POST, &quot;/veterinarios/*/eliminar&quot;).hasRole(&quot;COORDINADOR&quot;)</span>
+<span class="fc" id="L74">						.requestMatchers(&quot;/veterinarios/**&quot;).hasAnyRole(&quot;COORDINADOR&quot;, &quot;VETERINARIO&quot;)</span>
+<span class="fc" id="L75">						.requestMatchers(&quot;/citas/**&quot;).hasAnyRole(&quot;COORDINADOR&quot;, &quot;VETERINARIO&quot;)</span>
+<span class="fc" id="L76">						.requestMatchers(&quot;/registros-medicos/**&quot;).hasAnyRole(&quot;COORDINADOR&quot;, &quot;VETERINARIO&quot;)</span>
+<span class="fc" id="L77">						.requestMatchers(&quot;/facturas/**&quot;).hasAnyRole(&quot;COORDINADOR&quot;, &quot;VETERINARIO&quot;))</span>
+<span class="fc" id="L78">				.formLogin(form -&gt; form.disable())</span>
+<span class="fc" id="L79">				.httpBasic(basic -&gt; basic.disable())</span>
+<span class="fc" id="L80">				.logout(logout -&gt; logout</span>
+<span class="fc" id="L81">						.logoutUrl(&quot;/logout&quot;)</span>
+<span class="fc" id="L82">						.logoutSuccessUrl(&quot;/&quot;)</span>
+<span class="fc" id="L83">						.invalidateHttpSession(true)</span>
+<span class="fc" id="L84">						.clearAuthentication(true)</span>
+<span class="fc" id="L85">						.permitAll())</span>
+<span class="fc" id="L86">				.csrf(csrf -&gt; csrf.csrfTokenRepository(cookieCsrfTokenRepository))</span>
+<span class="fc" id="L87">				.headers(headers -&gt; headers</span>
+<span class="fc" id="L88">						.contentSecurityPolicy(csp -&gt; csp.policyDirectives(CSP_DIRECTIVES))</span>
+<span class="fc" id="L89">						.referrerPolicy(referrer -&gt; referrer.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))</span>
+<span class="fc" id="L90">						.frameOptions(Customizer.withDefaults())</span>
+<span class="fc" id="L91">						.xssProtection(xss -&gt; xss.headerValue(HeaderValue.ENABLED_MODE_BLOCK))</span>
+<span class="fc" id="L92">						.contentTypeOptions(Customizer.withDefaults()));</span>
+<span class="fc" id="L93">		return http.build();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

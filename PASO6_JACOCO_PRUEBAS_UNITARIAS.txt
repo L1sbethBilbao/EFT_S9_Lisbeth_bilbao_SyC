@@ -1,0 +1,73 @@
+================================================================================
+Paso 6 EFT — Pruebas unitarias (JUnit 5) + cobertura JaCoCo (≥ 90 % líneas)
+================================================================================
+
+Objetivo (instrucciones específicas)
+-----------------------------------
+Ejecutar pruebas unitarias con resultado exitoso y demostrar cobertura de al
+menos el 90 %, con reporte de JaCoCo como evidencia y captura del resultado de
+Maven/Surefire.
+
+Herramientas
+------------
+- JUnit 5 + Spring Boot Test (Surefire en Maven).
+- JaCoCo 0.8.13 (jacoco-maven-plugin): agente en tests, informe HTML en fase
+  test, comprobación (check) en fase verify.
+
+Umbral de cobertura
+-------------------
+Regla configurada en cada pom.xml (jacoco-check): COVEREDRATIO de LINEAS ≥ 0.90
+sobre el bundle del módulo. Si no se cumple, `mvn verify` falla.
+
+Frontend: el paquete `com.duoc.frontendS8.dto/**` está excluido del agente JaCoCo
+(pocos getters/setters); la cobertura útil se centra en web, service y validación.
+
+--------------------------------------------------------------------------------
+1) Ejecutar pruebas + verificar cobertura (recomendado para el informe)
+--------------------------------------------------------------------------------
+
+PowerShell (omitir OWASP en verify si solo quieres Paso 6):
+
+  cd backendS9
+  mvn verify "-Dowasp.dependency-check.skip=true"
+
+  cd ..\frontendS9
+  mvn verify "-Dowasp.dependency-check.skip=true"
+
+Salida esperada: BUILD SUCCESS, líneas tipo:
+  Tests run: ..., Failures: 0, Errors: 0
+  All coverage checks have been met.
+
+--------------------------------------------------------------------------------
+2) Dónde está el reporte JaCoCo (HTML para el PDF del informe)
+--------------------------------------------------------------------------------
+
+Tras `mvn verify` o `mvn test`:
+
+  reportes_jacoco/backendS9/index.html
+  reportes_jacoco/frontendS9/index.html
+
+(Copia también `target/site/jacoco/index.html` si ejecutaste sin regenerar;
+con la configuración actual el informe principal para evidencias es reportes_jacoco/.)
+
+Copia de datos de ejecución: target/jacoco.exec (por módulo).
+
+--------------------------------------------------------------------------------
+3) Evidencias sugeridas para el informe PDF
+--------------------------------------------------------------------------------
+- Captura de la consola con resumen Surefire (Tests run / BUILD SUCCESS).
+- Captura del dashboard JaCoCo (porcentaje total y tabla por paquete/clase).
+- Última ejecución local (fecha/hora en el log de Maven).
+
+--------------------------------------------------------------------------------
+4) Texto breve sugerido para el informe
+--------------------------------------------------------------------------------
+
+"Para el Paso 6 se ejecutaron las pruebas unitarias con JUnit en los módulos
+backend y frontend mediante Maven. Todas las pruebas finalizaron sin fallos.
+Se integró JaCoCo para medir cobertura de líneas; el build incluye una regla que
+exige al menos un 90 % de líneas cubiertas por el conjunto de pruebas. Los
+informes HTML de JaCoCo se archivaron como evidencia junto con la captura del
+resultado exitoso de la ejecución."
+
+================================================================================

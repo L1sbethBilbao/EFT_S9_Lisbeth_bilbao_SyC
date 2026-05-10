@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SolicitudAdopcionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.backendS8.service</a> &gt; <span class="el_source">SolicitudAdopcionService.java</span></div><h1>SolicitudAdopcionService.java</h1><pre class="source lang-java linenums">package com.duoc.backendS8.service;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.duoc.backendS8.dto.EstadoSolicitudPatchRequest;
+import com.duoc.backendS8.dto.MensajeCoordinadorRequest;
+import com.duoc.backendS8.dto.MensajeSeguimientoRequest;
+import com.duoc.backendS8.dto.MensajeSolicitudResponse;
+import com.duoc.backendS8.dto.SolicitudAdopcionCreateRequest;
+import com.duoc.backendS8.dto.SolicitudAdopcionCreatedResponse;
+import com.duoc.backendS8.dto.SolicitudAdopcionDatosPatchRequest;
+import com.duoc.backendS8.dto.MensajeSeguimientoPublicoResponse;
+import com.duoc.backendS8.dto.SolicitudAdopcionDetalleResponse;
+import com.duoc.backendS8.dto.SolicitudAdopcionListItemResponse;
+import com.duoc.backendS8.dto.SolicitudAdopcionSeguimientoPublicoResponse;
+import com.duoc.backendS8.entity.Animal;
+import com.duoc.backendS8.entity.Dueno;
+import com.duoc.backendS8.entity.EstadoAdopcion;
+import com.duoc.backendS8.entity.EstadoSolicitudAdopcion;
+import com.duoc.backendS8.entity.MensajeSolicitudAdopcion;
+import com.duoc.backendS8.entity.RolMensajeSolicitudAdopcion;
+import com.duoc.backendS8.entity.SolicitudAdopcion;
+import com.duoc.backendS8.repository.AnimalRepository;
+import com.duoc.backendS8.repository.DuenoRepository;
+import com.duoc.backendS8.repository.MensajeSolicitudAdopcionRepository;
+import com.duoc.backendS8.repository.SolicitudAdopcionRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
+@Service
+public class SolicitudAdopcionService {
+
+	private final SolicitudAdopcionRepository solicitudRepository;
+	private final MensajeSolicitudAdopcionRepository mensajeRepository;
+	private final AnimalRepository animalRepository;
+	private final DuenoRepository duenoRepository;
+
+<span class="fc" id="L42">	public SolicitudAdopcionService(</span>
+			SolicitudAdopcionRepository solicitudRepository,
+			MensajeSolicitudAdopcionRepository mensajeRepository,
+			AnimalRepository animalRepository,
+			DuenoRepository duenoRepository) {
+<span class="fc" id="L47">		this.solicitudRepository = solicitudRepository;</span>
+<span class="fc" id="L48">		this.mensajeRepository = mensajeRepository;</span>
+<span class="fc" id="L49">		this.animalRepository = animalRepository;</span>
+<span class="fc" id="L50">		this.duenoRepository = duenoRepository;</span>
+<span class="fc" id="L51">	}</span>
+
+	@Transactional
+	public SolicitudAdopcionCreatedResponse crear(SolicitudAdopcionCreateRequest req) {
+<span class="fc" id="L55">		Animal animal = animalRepository.findById(req.animalId())</span>
+<span class="fc" id="L56">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Animal no encontrado&quot;));</span>
+<span class="fc" id="L57">		EstadoAdopcion ea = animal.getEstadoAdopcion();</span>
+<span class="fc bfc" id="L58" title="All 4 branches covered.">		if (ea != EstadoAdopcion.DISPONIBLE &amp;&amp; ea != EstadoAdopcion.EN_ACOGIDA) {</span>
+<span class="fc" id="L59">			throw new IllegalStateException(</span>
+<span class="fc" id="L60">					&quot;Este animal no acepta solicitudes de adopción en su estado actual (&quot; + ea + &quot;).&quot;);</span>
+		}
+<span class="fc" id="L62">		String email = req.email().trim();</span>
+<span class="fc" id="L63">		if (solicitudRepository.existsByAnimal_IdAndEmailIgnoreCaseAndEstadoIn(</span>
+<span class="fc" id="L64">				animal.getId(),</span>
+<span class="fc" id="L65">				email,</span>
+<span class="fc" id="L66">				List.of(</span>
+<span class="fc" id="L67">						EstadoSolicitudAdopcion.PENDIENTE,</span>
+<span class="fc" id="L68">						EstadoSolicitudAdopcion.EN_REVISION,</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">						EstadoSolicitudAdopcion.APROBADA))) {</span>
+<span class="fc" id="L70">			throw new IllegalStateException(</span>
+<span class="fc" id="L71">					&quot;Ya existe una solicitud de adopción con este correo para la misma mascota. &quot;</span>
+							+ &quot;Ingrese a Seguimiento con el código que recibió para ver el estado o escribir a coordinación. &quot;
+							+ &quot;Si su solicitud anterior fue rechazada, podrá volver a postular.&quot;);
+		}
+<span class="fc" id="L75">		SolicitudAdopcion s = SolicitudAdopcion.builder()</span>
+<span class="fc" id="L76">				.codigoSeguimiento(UUID.randomUUID().toString())</span>
+<span class="fc" id="L77">				.animal(animal)</span>
+<span class="fc" id="L78">				.nombreCompleto(req.nombreCompleto().trim())</span>
+<span class="fc" id="L79">				.email(email)</span>
+<span class="fc" id="L80">				.telefono(trimToNull(req.telefono()))</span>
+<span class="fc" id="L81">				.direccion(trimToNull(req.direccion()))</span>
+<span class="fc" id="L82">				.ciudad(trimToNull(req.ciudad()))</span>
+<span class="fc" id="L83">				.tipoVivienda(req.tipoVivienda())</span>
+<span class="fc" id="L84">				.personasEnHogar(req.personasEnHogar())</span>
+<span class="fc" id="L85">				.tieneNinos(Boolean.TRUE.equals(req.tieneNinos()))</span>
+<span class="fc" id="L86">				.tieneOtrasMascotas(Boolean.TRUE.equals(req.tieneOtrasMascotas()))</span>
+<span class="fc" id="L87">				.experienciaMascotas(trimToNull(req.experienciaMascotas()))</span>
+<span class="fc" id="L88">				.motivacionAdopcion(req.motivacionAdopcion().trim())</span>
+<span class="fc" id="L89">				.estado(EstadoSolicitudAdopcion.PENDIENTE)</span>
+<span class="fc" id="L90">				.build();</span>
+<span class="fc" id="L91">		solicitudRepository.save(s);</span>
+<span class="fc" id="L92">		MensajeSolicitudAdopcion primer = MensajeSolicitudAdopcion.builder()</span>
+<span class="fc" id="L93">				.solicitud(s)</span>
+<span class="fc" id="L94">				.rolAutor(RolMensajeSolicitudAdopcion.SOLICITANTE)</span>
+<span class="fc" id="L95">				.cuerpo(&quot;Motivación declarada en el formulario:\n\n&quot; + s.getMotivacionAdopcion())</span>
+<span class="fc" id="L96">				.build();</span>
+<span class="fc" id="L97">		mensajeRepository.save(primer);</span>
+<span class="fc" id="L98">		return new SolicitudAdopcionCreatedResponse(</span>
+<span class="fc" id="L99">				s.getId(),</span>
+<span class="fc" id="L100">				s.getCodigoSeguimiento(),</span>
+<span class="fc" id="L101">				animal.getNombre(),</span>
+<span class="fc" id="L102">				&quot;Guarde su código de seguimiento para enviar mensajes a coordinación.&quot;);</span>
+	}
+
+	@Transactional
+	public void agregarMensajeSolicitante(MensajeSeguimientoRequest req) {
+<span class="fc" id="L107">		SolicitudAdopcion s = solicitudRepository.findByCodigoSeguimiento(req.codigoSeguimiento().trim())</span>
+<span class="fc" id="L108">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Código de seguimiento no válido&quot;));</span>
+<span class="pc bpc" id="L109" title="1 of 4 branches missed.">		if (s.getEstado() == EstadoSolicitudAdopcion.RECHAZADA || s.getEstado() == EstadoSolicitudAdopcion.APROBADA) {</span>
+<span class="fc" id="L110">			throw new IllegalStateException(&quot;Esta solicitud está cerrada; no se pueden añadir mensajes.&quot;);</span>
+		}
+<span class="fc" id="L112">		MensajeSolicitudAdopcion m = MensajeSolicitudAdopcion.builder()</span>
+<span class="fc" id="L113">				.solicitud(s)</span>
+<span class="fc" id="L114">				.rolAutor(RolMensajeSolicitudAdopcion.SOLICITANTE)</span>
+<span class="fc" id="L115">				.cuerpo(req.cuerpo().trim())</span>
+<span class="fc" id="L116">				.build();</span>
+<span class="fc" id="L117">		mensajeRepository.save(m);</span>
+<span class="fc" id="L118">	}</span>
+
+	@Transactional(readOnly = true)
+	public List&lt;SolicitudAdopcionListItemResponse&gt; listarParaCoordinador() {
+<span class="fc" id="L122">		return solicitudRepository.findAllByOrderByCreatedAtDesc().stream()</span>
+<span class="fc" id="L123">				.map(s -&gt; new SolicitudAdopcionListItemResponse(</span>
+<span class="fc" id="L124">						s.getId(),</span>
+<span class="fc" id="L125">						s.getCodigoSeguimiento(),</span>
+<span class="fc" id="L126">						s.getAnimal().getId(),</span>
+<span class="fc" id="L127">						s.getAnimal().getNombre(),</span>
+<span class="fc" id="L128">						s.getNombreCompleto(),</span>
+<span class="fc" id="L129">						s.getEmail(),</span>
+<span class="fc" id="L130">						s.getEstado(),</span>
+<span class="fc" id="L131">						s.getCreatedAt()))</span>
+<span class="fc" id="L132">				.toList();</span>
+	}
+
+	@Transactional(readOnly = true)
+	public SolicitudAdopcionDetalleResponse obtenerParaCoordinador(Long id) {
+<span class="fc" id="L137">		SolicitudAdopcion s = solicitudRepository.findById(id)</span>
+<span class="fc" id="L138">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Solicitud no encontrada&quot;));</span>
+<span class="fc" id="L139">		List&lt;MensajeSolicitudResponse&gt; mensajes = mensajeRepository.findBySolicitudIdOrderByCreatedAtAsc(id).stream()</span>
+<span class="pc" id="L140">				.map(m -&gt; new MensajeSolicitudResponse(m.getId(), m.getRolAutor(), m.getCuerpo(), m.getCreatedAt()))</span>
+<span class="fc" id="L141">				.toList();</span>
+<span class="fc" id="L142">		Animal a = s.getAnimal();</span>
+<span class="fc" id="L143">		return new SolicitudAdopcionDetalleResponse(</span>
+<span class="fc" id="L144">				s.getId(),</span>
+<span class="fc" id="L145">				s.getCodigoSeguimiento(),</span>
+<span class="fc" id="L146">				a.getId(),</span>
+<span class="fc" id="L147">				a.getNombre(),</span>
+<span class="fc" id="L148">				s.getNombreCompleto(),</span>
+<span class="fc" id="L149">				s.getEmail(),</span>
+<span class="fc" id="L150">				s.getTelefono(),</span>
+<span class="fc" id="L151">				s.getDireccion(),</span>
+<span class="fc" id="L152">				s.getCiudad(),</span>
+<span class="fc" id="L153">				s.getTipoVivienda(),</span>
+<span class="fc" id="L154">				s.getPersonasEnHogar(),</span>
+<span class="fc" id="L155">				s.getTieneNinos(),</span>
+<span class="fc" id="L156">				s.getTieneOtrasMascotas(),</span>
+<span class="fc" id="L157">				s.getExperienciaMascotas(),</span>
+<span class="fc" id="L158">				s.getMotivacionAdopcion(),</span>
+<span class="fc" id="L159">				s.getEstado(),</span>
+<span class="fc" id="L160">				s.getCreatedAt(),</span>
+<span class="fc" id="L161">				mensajes);</span>
+	}
+
+	@Transactional
+	public void agregarMensajeCoordinador(Long id, MensajeCoordinadorRequest req) {
+<span class="fc" id="L166">		SolicitudAdopcion s = solicitudRepository.findById(id)</span>
+<span class="pc" id="L167">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Solicitud no encontrada&quot;));</span>
+<span class="fc" id="L168">		MensajeSolicitudAdopcion m = MensajeSolicitudAdopcion.builder()</span>
+<span class="fc" id="L169">				.solicitud(s)</span>
+<span class="fc" id="L170">				.rolAutor(RolMensajeSolicitudAdopcion.COORDINADOR)</span>
+<span class="fc" id="L171">				.cuerpo(req.cuerpo().trim())</span>
+<span class="fc" id="L172">				.build();</span>
+<span class="fc" id="L173">		mensajeRepository.save(m);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">		if (s.getEstado() == EstadoSolicitudAdopcion.PENDIENTE) {</span>
+<span class="fc" id="L175">			s.setEstado(EstadoSolicitudAdopcion.EN_REVISION);</span>
+		}
+<span class="fc" id="L177">	}</span>
+
+	@Transactional
+	public void actualizarEstado(Long id, EstadoSolicitudPatchRequest req) {
+<span class="fc" id="L181">		SolicitudAdopcion s = solicitudRepository.findById(id)</span>
+<span class="pc" id="L182">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Solicitud no encontrada&quot;));</span>
+<span class="fc" id="L183">		EstadoSolicitudAdopcion anterior = s.getEstado();</span>
+<span class="fc" id="L184">		EstadoSolicitudAdopcion nuevo = req.estado();</span>
+<span class="fc" id="L185">		s.setEstado(nuevo);</span>
+<span class="fc" id="L186">		solicitudRepository.save(s);</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">		if (nuevo == EstadoSolicitudAdopcion.APROBADA) {</span>
+<span class="fc" id="L188">			Animal animal = animalRepository.findById(s.getAnimal().getId()).orElseThrow();</span>
+<span class="fc bfc" id="L189" title="All 4 branches covered.">			boolean debeVincular = anterior != EstadoSolicitudAdopcion.APROBADA || animal.getDueno() == null;</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">			if (debeVincular) {</span>
+<span class="fc" id="L191">				registrarAdopcionEnDueñoYMascota(s);</span>
+			}
+		}
+<span class="fc" id="L194">	}</span>
+
+	/**
+	 * Repara solicitudes ya marcadas como aprobadas cuyo animal aún no tiene dueño
+	 * (p. ej. datos creados antes de esta lógica). Idempotente.
+	 */
+	@Transactional
+	public void reconciliarAprobadasSinDueñoEnAnimal() {
+<span class="fc bfc" id="L202" title="All 2 branches covered.">		for (SolicitudAdopcion s : solicitudRepository</span>
+<span class="fc" id="L203">				.findAprobadasConAnimalSinDueno(EstadoSolicitudAdopcion.APROBADA)) {</span>
+<span class="fc" id="L204">			registrarAdopcionEnDueñoYMascota(s);</span>
+		}
+<span class="fc" id="L206">	}</span>
+
+	private void registrarAdopcionEnDueñoYMascota(SolicitudAdopcion s) {
+<span class="fc" id="L209">		Long animalId = s.getAnimal().getId();</span>
+<span class="fc" id="L210">		Animal animal = animalRepository.findById(animalId)</span>
+<span class="pc" id="L211">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Animal no encontrado&quot;));</span>
+<span class="fc" id="L212">		String email = s.getEmail().trim();</span>
+<span class="fc" id="L213">		Dueno dueno = duenoRepository.findByEmailIgnoreCase(email)</span>
+<span class="fc" id="L214">				.orElseGet(() -&gt; Dueno.builder()</span>
+<span class="fc" id="L215">						.nombreCompleto(s.getNombreCompleto().trim())</span>
+<span class="fc" id="L216">						.email(email)</span>
+<span class="fc" id="L217">						.telefono(trimToNull(s.getTelefono()))</span>
+<span class="fc" id="L218">						.direccion(construirDireccionDueno(s))</span>
+<span class="fc" id="L219">						.build());</span>
+<span class="fc" id="L220">		dueno.setNombreCompleto(s.getNombreCompleto().trim());</span>
+<span class="fc" id="L221">		dueno.setTelefono(trimToNull(s.getTelefono()));</span>
+<span class="fc" id="L222">		dueno.setDireccion(construirDireccionDueno(s));</span>
+<span class="pc bpc" id="L223" title="2 of 4 branches missed.">		if (dueno.getEmail() == null || dueno.getEmail().isBlank()) {</span>
+<span class="nc" id="L224">			dueno.setEmail(email);</span>
+		}
+<span class="fc" id="L226">		dueno = duenoRepository.save(dueno);</span>
+<span class="fc" id="L227">		animal.setDueno(dueno);</span>
+<span class="fc" id="L228">		animal.setEstadoAdopcion(EstadoAdopcion.ADOPTADO);</span>
+<span class="fc" id="L229">		animalRepository.save(animal);</span>
+<span class="fc" id="L230">	}</span>
+
+	private static String construirDireccionDueno(SolicitudAdopcion s) {
+<span class="fc" id="L233">		String d = trimToNull(s.getDireccion());</span>
+<span class="fc" id="L234">		String c = trimToNull(s.getCiudad());</span>
+<span class="pc bpc" id="L235" title="1 of 4 branches missed.">		if (d == null &amp;&amp; c == null) {</span>
+<span class="fc" id="L236">			return null;</span>
+		}
+<span class="pc bpc" id="L238" title="1 of 2 branches missed.">		if (d == null) {</span>
+<span class="nc" id="L239">			return c;</span>
+		}
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">		if (c == null) {</span>
+<span class="nc" id="L242">			return d;</span>
+		}
+<span class="fc" id="L244">		return d + &quot;, &quot; + c;</span>
+	}
+
+	@Transactional
+	public void actualizarDatosCoordinador(Long id, SolicitudAdopcionDatosPatchRequest req) {
+<span class="fc" id="L249">		SolicitudAdopcion s = solicitudRepository.findById(id)</span>
+<span class="pc" id="L250">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Solicitud no encontrada&quot;));</span>
+<span class="pc bpc" id="L251" title="1 of 4 branches missed.">		if (s.getEstado() == EstadoSolicitudAdopcion.APROBADA || s.getEstado() == EstadoSolicitudAdopcion.RECHAZADA) {</span>
+<span class="fc" id="L252">			throw new IllegalStateException(</span>
+<span class="fc" id="L253">					&quot;No se pueden corregir datos de una solicitud cerrada (aprobada o rechazada).&quot;);</span>
+		}
+<span class="fc" id="L255">		String newEmail = req.email().trim();</span>
+<span class="fc" id="L256">		Long animalId = s.getAnimal().getId();</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">		if (!newEmail.equalsIgnoreCase(s.getEmail().trim())) {</span>
+<span class="fc" id="L258">			if (solicitudRepository.existsByAnimal_IdAndEmailIgnoreCaseAndEstadoInAndIdNot(</span>
+<span class="fc" id="L259">					animalId,</span>
+<span class="fc" id="L260">					newEmail,</span>
+<span class="fc" id="L261">					List.of(</span>
+<span class="fc" id="L262">							EstadoSolicitudAdopcion.PENDIENTE,</span>
+<span class="fc" id="L263">							EstadoSolicitudAdopcion.EN_REVISION,</span>
+<span class="fc" id="L264">							EstadoSolicitudAdopcion.APROBADA),</span>
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">					id)) {</span>
+<span class="fc" id="L266">				throw new IllegalStateException(</span>
+<span class="fc" id="L267">						&quot;Ya existe otra solicitud activa con ese correo electrónico para la misma mascota.&quot;);</span>
+			}
+		}
+<span class="fc" id="L270">		s.setNombreCompleto(req.nombreCompleto().trim());</span>
+<span class="fc" id="L271">		s.setEmail(newEmail);</span>
+<span class="fc" id="L272">		s.setTelefono(trimToNull(req.telefono()));</span>
+<span class="fc" id="L273">		s.setDireccion(trimToNull(req.direccion()));</span>
+<span class="fc" id="L274">		s.setCiudad(trimToNull(req.ciudad()));</span>
+<span class="fc" id="L275">		s.setTipoVivienda(req.tipoVivienda());</span>
+<span class="fc" id="L276">		s.setPersonasEnHogar(req.personasEnHogar());</span>
+<span class="fc" id="L277">		s.setTieneNinos(Boolean.TRUE.equals(req.tieneNinos()));</span>
+<span class="fc" id="L278">		s.setTieneOtrasMascotas(Boolean.TRUE.equals(req.tieneOtrasMascotas()));</span>
+<span class="fc" id="L279">		s.setExperienciaMascotas(trimToNull(req.experienciaMascotas()));</span>
+<span class="fc" id="L280">		s.setMotivacionAdopcion(req.motivacionAdopcion().trim());</span>
+<span class="pc bpc" id="L281" title="1 of 2 branches missed.">		if (s.getEstado() == EstadoSolicitudAdopcion.PENDIENTE) {</span>
+<span class="fc" id="L282">			s.setEstado(EstadoSolicitudAdopcion.EN_REVISION);</span>
+		}
+<span class="fc" id="L284">		solicitudRepository.save(s);</span>
+<span class="fc" id="L285">		String constancia = req.constanciaSolicitante().trim();</span>
+<span class="fc" id="L286">		MensajeSolicitudAdopcion logCambio = MensajeSolicitudAdopcion.builder()</span>
+<span class="fc" id="L287">				.solicitud(s)</span>
+<span class="fc" id="L288">				.rolAutor(RolMensajeSolicitudAdopcion.COORDINADOR)</span>
+<span class="fc" id="L289">				.cuerpo(&quot;Actualización de datos del formulario a petición del solicitante.\n\n&quot;</span>
+						+ &quot;Constancia registrada por coordinación:\n&quot;
+<span class="fc" id="L291">						+ constancia)</span>
+<span class="fc" id="L292">				.build();</span>
+<span class="fc" id="L293">		mensajeRepository.save(logCambio);</span>
+<span class="fc" id="L294">	}</span>
+
+	@Transactional
+	public void eliminar(Long id) {
+<span class="fc bfc" id="L298" title="All 2 branches covered.">		if (!solicitudRepository.existsById(id)) {</span>
+<span class="fc" id="L299">			throw new EntityNotFoundException(&quot;Solicitud no encontrada&quot;);</span>
+		}
+<span class="fc" id="L301">		mensajeRepository.deleteBySolicitud_Id(id);</span>
+<span class="fc" id="L302">		solicitudRepository.deleteById(id);</span>
+<span class="fc" id="L303">	}</span>
+
+	@Transactional(readOnly = true)
+	public SolicitudAdopcionSeguimientoPublicoResponse obtenerVistaPublicaPorCodigo(String codigo) {
+<span class="fc bfc" id="L307" title="All 4 branches covered.">		if (codigo == null || codigo.isBlank()) {</span>
+<span class="fc" id="L308">			throw new EntityNotFoundException(&quot;Código de seguimiento no válido&quot;);</span>
+		}
+<span class="fc" id="L310">		SolicitudAdopcion s = solicitudRepository.findByCodigoSeguimiento(codigo.trim())</span>
+<span class="fc" id="L311">				.orElseThrow(() -&gt; new EntityNotFoundException(&quot;Código de seguimiento no encontrado&quot;));</span>
+<span class="fc" id="L312">		List&lt;MensajeSeguimientoPublicoResponse&gt; mensajes = mensajeRepository.findBySolicitudIdOrderByCreatedAtAsc(s.getId()).stream()</span>
+<span class="pc" id="L313">				.map(m -&gt; new MensajeSeguimientoPublicoResponse(m.getRolAutor(), m.getCuerpo(), m.getCreatedAt()))</span>
+<span class="fc" id="L314">				.toList();</span>
+<span class="fc" id="L315">		Animal a = s.getAnimal();</span>
+<span class="fc" id="L316">		return new SolicitudAdopcionSeguimientoPublicoResponse(</span>
+<span class="fc" id="L317">				s.getCodigoSeguimiento(),</span>
+<span class="fc" id="L318">				s.getEstado(),</span>
+<span class="fc" id="L319">				descripcionEstadoPublico(s.getEstado()),</span>
+<span class="fc" id="L320">				a.getNombre(),</span>
+<span class="fc" id="L321">				mensajes);</span>
+	}
+
+	private static String descripcionEstadoPublico(EstadoSolicitudAdopcion e) {
+<span class="pc bpc" id="L325" title="1 of 2 branches missed.">		if (e == null) {</span>
+<span class="nc" id="L326">			return &quot;&quot;;</span>
+		}
+<span class="fc bfc" id="L328" title="All 4 branches covered.">		return switch (e) {</span>
+<span class="fc" id="L329">			case PENDIENTE -&gt; &quot;Su solicitud está registrada y pendiente de revisión por coordinación.&quot;;</span>
+<span class="fc" id="L330">			case EN_REVISION -&gt; &quot;Un coordinador está revisando su solicitud. Puede leer mensajes abajo.&quot;;</span>
+<span class="fc" id="L331">			case APROBADA -&gt; &quot;Su solicitud fue aprobada en el sistema. Coordinación puede contactarla por los datos que entregó.&quot;;</span>
+<span class="fc" id="L332">			case RECHAZADA -&gt; &quot;Esta solicitud fue cerrada sin aprobación. Si tiene dudas, puede escribirnos indicando su código.&quot;;</span>
+		};
+	}
+
+	private static String trimToNull(String s) {
+<span class="fc bfc" id="L337" title="All 2 branches covered.">		if (s == null) {</span>
+<span class="fc" id="L338">			return null;</span>
+		}
+<span class="fc" id="L340">		String t = s.trim();</span>
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">		return t.isEmpty() ? null : t;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

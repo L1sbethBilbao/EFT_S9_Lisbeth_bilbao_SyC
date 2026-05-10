@@ -1,0 +1,21 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+,com.duoc.frontendS8,FrontendS8Application,0,8,0,0,0,3,0,2,0,2
+,com.duoc.frontendS8.web,AnimalWebController,24,213,4,8,4,50,4,12,0,10
+,com.duoc.frontendS8.web,PublicMascotaController,0,23,0,0,0,8,0,2,0,2
+,com.duoc.frontendS8.web,RegistroMedicoWebController,15,109,2,4,5,26,2,5,0,4
+,com.duoc.frontendS8.web,AdopcionPublicFlujoWebController,58,315,15,29,23,94,15,17,0,10
+,com.duoc.frontendS8.web,DuenoWebController,19,126,2,2,5,27,2,8,0,8
+,com.duoc.frontendS8.web,SessionJwt,0,31,1,5,0,7,1,3,0,1
+,com.duoc.frontendS8.web,VeterinarioWebController,19,135,2,2,5,29,2,8,0,8
+,com.duoc.frontendS8.web,LoginController,14,113,8,14,4,32,8,6,0,3
+,com.duoc.frontendS8.web,CitaWebController,3,253,2,10,0,50,2,11,0,7
+,com.duoc.frontendS8.web,FacturaWebController,13,186,8,10,2,37,8,10,0,9
+,com.duoc.frontendS8.web,AdopcionGestionWebController,32,336,14,16,6,83,14,12,0,11
+,com.duoc.frontendS8.web,HomeController,50,199,3,7,11,54,3,6,0,4
+,com.duoc.frontendS8.config,WebConfig,0,10,0,0,0,2,0,2,0,2
+,com.duoc.frontendS8.config,SecurityConfig,0,394,0,0,0,63,0,14,0,14
+,com.duoc.frontendS8.service,BackendApiClient,18,924,12,36,7,221,12,51,0,39
+,com.duoc.frontendS8.service,BackendApiClient.new ParameterizedTypeReference() {...},0,6,0,0,0,1,0,1,0,1
+,com.duoc.frontendS8.exception,BackendUnavailableException,0,5,0,0,0,2,0,1,0,1
+,com.duoc.frontendS8.validation,InputSafety,0,28,0,8,0,5,0,6,0,2
+,com.duoc.frontendS8.validation,SafePlainTextValidator,0,17,1,5,0,4,1,4,0,2

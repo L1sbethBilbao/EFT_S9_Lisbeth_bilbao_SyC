@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.backendS8.web</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package com.duoc.backendS8.web;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.duoc.backendS8.dto.LoginRequest;
+import com.duoc.backendS8.dto.LoginResponse;
+import com.duoc.backendS8.dto.SessionUsuarioResponse;
+import com.duoc.backendS8.entity.Usuario;
+import com.duoc.backendS8.repository.UsuarioRepository;
+import com.duoc.backendS8.service.AuthService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping(&quot;/api/auth&quot;)
+public class AuthController {
+
+	private final AuthService authService;
+	private final UsuarioRepository usuarioRepository;
+
+<span class="fc" id="L27">	public AuthController(AuthService authService, UsuarioRepository usuarioRepository) {</span>
+<span class="fc" id="L28">		this.authService = authService;</span>
+<span class="fc" id="L29">		this.usuarioRepository = usuarioRepository;</span>
+<span class="fc" id="L30">	}</span>
+
+	@PostMapping(&quot;/login&quot;)
+	public ResponseEntity&lt;LoginResponse&gt; login(@Valid @RequestBody LoginRequest request) {
+<span class="fc" id="L34">		return ResponseEntity.ok(authService.login(request.username(), request.password()));</span>
+	}
+
+	@GetMapping(&quot;/me&quot;)
+	public ResponseEntity&lt;SessionUsuarioResponse&gt; sesion(Authentication authentication) {
+<span class="fc" id="L39">		Usuario u = usuarioRepository.findByUsernameFetchingVeterinario(authentication.getName())</span>
+<span class="fc" id="L40">				.orElseThrow();</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">		Long vid = u.getVeterinario() != null ? u.getVeterinario().getId() : null;</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">		String vnom = u.getVeterinario() != null ? u.getVeterinario().getNombre() : null;</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">		String rol = u.getRol() != null ? u.getRol().name() : &quot;&quot;;</span>
+<span class="fc" id="L44">		return ResponseEntity.ok(new SessionUsuarioResponse(u.getUsername(), rol, vid, vnom));</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

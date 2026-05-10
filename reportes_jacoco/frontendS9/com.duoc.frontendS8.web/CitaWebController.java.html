@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CitaWebController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.frontendS8.web</a> &gt; <span class="el_source">CitaWebController.java</span></div><h1>CitaWebController.java</h1><pre class="source lang-java linenums">package com.duoc.frontendS8.web;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Comparator;
+import java.util.List;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.duoc.frontendS8.dto.AnimalDto;
+import com.duoc.frontendS8.dto.CitaForm;
+import com.duoc.frontendS8.dto.CitaPasoForm;
+import com.duoc.frontendS8.dto.SessionUsuarioDto;
+import com.duoc.frontendS8.dto.VeterinarioDto;
+import com.duoc.frontendS8.service.BackendApiClient;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+
+@Controller
+@RequestMapping(&quot;/citas&quot;)
+public class CitaWebController {
+
+	private final BackendApiClient backendApiClient;
+
+<span class="fc" id="L36">	public CitaWebController(BackendApiClient backendApiClient) {</span>
+<span class="fc" id="L37">		this.backendApiClient = backendApiClient;</span>
+<span class="fc" id="L38">	}</span>
+
+	@GetMapping
+	public String listar(Model model, HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L42">		response.setHeader(&quot;Cache-Control&quot;, &quot;no-store, no-cache, must-revalidate&quot;);</span>
+<span class="fc" id="L43">		model.addAttribute(&quot;citas&quot;, backendApiClient.listarCitas(SessionJwt.get(request)));</span>
+<span class="fc" id="L44">		return &quot;citas&quot;;</span>
+	}
+
+	@GetMapping(&quot;/nueva&quot;)
+	public String nueva(Model model, HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L49">		response.setHeader(&quot;Cache-Control&quot;, &quot;no-store, no-cache, must-revalidate&quot;);</span>
+<span class="fc" id="L50">		String jwt = SessionJwt.get(request);</span>
+<span class="fc" id="L51">		SessionUsuarioDto me = backendApiClient.obtenerSesion(jwt);</span>
+<span class="fc" id="L52">		List&lt;AnimalDto&gt; animales = backendApiClient.listarAnimales(null, null, null, null, null, null, null);</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">		Long animalId = animales.isEmpty() ? null : animales.get(0).id();</span>
+<span class="fc" id="L54">		LocalDate d = LocalDate.now().plusDays(1);</span>
+<span class="fc" id="L55">		LocalTime t = LocalTime.of(10, 0);</span>
+<span class="fc" id="L56">		boolean elegirVet = &quot;COORDINADOR&quot;.equals(me.rol());</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">		if (elegirVet) {</span>
+<span class="fc" id="L58">			model.addAttribute(&quot;citaForm&quot;, new CitaPasoForm(animalId, null, d, t, &quot;&quot;));</span>
+<span class="fc" id="L59">		}</span>
+		else {
+<span class="fc bfc" id="L61" title="All 2 branches covered.">			if (me.veterinarioId() == null) {</span>
+<span class="fc" id="L62">				model.addAttribute(</span>
+<span class="fc" id="L63">						&quot;backendError&quot;,</span>
+<span class="fc" id="L64">						&quot;Tu usuario veterinario no tiene un perfil clínico vinculado. Contacta a la coordinación.&quot;);</span>
+			}
+<span class="fc" id="L66">			model.addAttribute(&quot;citaForm&quot;, new CitaPasoForm(animalId, me.veterinarioId(), d, t, &quot;&quot;));</span>
+		}
+<span class="fc" id="L68">		model.addAttribute(&quot;elegirVeterinario&quot;, elegirVet);</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">		model.addAttribute(&quot;miVeterinarioNombre&quot;, me.veterinarioNombre() != null ? me.veterinarioNombre() : &quot;&quot;);</span>
+<span class="fc" id="L70">		model.addAttribute(&quot;animales&quot;, animales);</span>
+<span class="fc" id="L71">		model.addAttribute(&quot;veterinarios&quot;, veterinariosActivosParaAgenda(jwt));</span>
+<span class="fc" id="L72">		return &quot;cita-form&quot;;</span>
+	}
+
+	@PostMapping
+	public String crear(
+			@Valid @ModelAttribute(&quot;citaForm&quot;) CitaPasoForm form,
+			BindingResult bindingResult,
+			Model model,
+			HttpServletRequest request,
+			RedirectAttributes ra) {
+<span class="fc" id="L82">		String jwt = SessionJwt.get(request);</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">		if (bindingResult.hasErrors()) {</span>
+<span class="fc" id="L84">			rellenarModeloFormularioCita(model, jwt, form);</span>
+<span class="fc" id="L85">			return &quot;cita-form&quot;;</span>
+		}
+<span class="fc" id="L87">		LocalDateTime fh = LocalDateTime.of(form.fecha(), form.hora());</span>
+<span class="fc" id="L88">		CitaForm api = new CitaForm(form.animalId(), form.veterinarioId(), fh, form.motivo());</span>
+<span class="fc" id="L89">		backendApiClient.crearCita(jwt, api);</span>
+<span class="fc" id="L90">		ra.addFlashAttribute(&quot;mensaje&quot;, &quot;Cita agendada.&quot;);</span>
+<span class="fc" id="L91">		return &quot;redirect:/citas&quot;;</span>
+	}
+
+	private void rellenarModeloFormularioCita(Model model, String jwt, CitaPasoForm formActual) {
+<span class="fc" id="L95">		SessionUsuarioDto me = backendApiClient.obtenerSesion(jwt);</span>
+<span class="fc" id="L96">		model.addAttribute(&quot;citaForm&quot;, formActual);</span>
+<span class="fc" id="L97">		model.addAttribute(&quot;elegirVeterinario&quot;, &quot;COORDINADOR&quot;.equals(me.rol()));</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">		model.addAttribute(&quot;miVeterinarioNombre&quot;, me.veterinarioNombre() != null ? me.veterinarioNombre() : &quot;&quot;);</span>
+<span class="fc" id="L99">		model.addAttribute(&quot;animales&quot;, backendApiClient.listarAnimales(null, null, null, null, null, null, null));</span>
+<span class="fc" id="L100">		model.addAttribute(&quot;veterinarios&quot;, veterinariosActivosParaAgenda(jwt));</span>
+<span class="fc" id="L101">	}</span>
+
+	/** Veterinarios activos para el combo: mismo listado que /veterinarios, filtrado. */
+	private List&lt;VeterinarioDto&gt; veterinariosActivosParaAgenda(String jwt) {
+<span class="fc" id="L105">		return backendApiClient.listarVeterinarios(jwt).stream()</span>
+<span class="fc" id="L106">				.filter(VeterinarioDto::activo)</span>
+<span class="fc" id="L107">				.sorted(Comparator.comparing(VeterinarioDto::nombre, Comparator.nullsLast(String::compareToIgnoreCase)))</span>
+<span class="fc" id="L108">				.toList();</span>
+	}
+
+	@PostMapping(&quot;/{id}/cancelar&quot;)
+	public String cancelar(@PathVariable Long id, HttpServletRequest request, RedirectAttributes ra) {
+<span class="fc" id="L113">		backendApiClient.cancelarCita(SessionJwt.get(request), id);</span>
+<span class="fc" id="L114">		ra.addFlashAttribute(&quot;mensaje&quot;, &quot;Cita cancelada.&quot;);</span>
+<span class="fc" id="L115">		return &quot;redirect:/citas&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

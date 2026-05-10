@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -52,5 +53,13 @@ class GlobalExceptionHandlerTest {
 		var res = handler.conflict(new IllegalStateException("estado"));
 		assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 		assertThat(res.getBody().message()).isEqualTo("estado");
+	}
+
+	@Test
+	void dataIntegrityReturnsConflict() {
+		var res = handler.dataIntegrity(new DataIntegrityViolationException("fk"));
+		assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+		assertThat(res.getBody()).isNotNull();
+		assertThat(res.getBody().message()).contains("registros relacionados");
 	}
 }

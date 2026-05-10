@@ -15,8 +15,8 @@ Desde la carpeta EFT_S9_Lisbeth_bilbao_SyC:
 
   docker compose -f docker-compose.openvas.yml up -d
 
-Interfaz web:
-  https://localhost:9392
+Interfaz web (HTTP; si usas https:// veras ERR_SSL_PROTOCOL_ERROR):
+  http://localhost:9392
 
 Credenciales iniciales (definidas en compose):
   usuario: admin

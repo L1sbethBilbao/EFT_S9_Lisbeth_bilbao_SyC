@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DuenoWebController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.frontendS8.web</a> &gt; <span class="el_source">DuenoWebController.java</span></div><h1>DuenoWebController.java</h1><pre class="source lang-java linenums">package com.duoc.frontendS8.web;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.duoc.frontendS8.dto.DuenoForm;
+import com.duoc.frontendS8.service.BackendApiClient;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+
+@Controller
+@RequestMapping(&quot;/duenos&quot;)
+public class DuenoWebController {
+
+	private final BackendApiClient backendApiClient;
+
+<span class="fc" id="L25">	public DuenoWebController(BackendApiClient backendApiClient) {</span>
+<span class="fc" id="L26">		this.backendApiClient = backendApiClient;</span>
+<span class="fc" id="L27">	}</span>
+
+	@GetMapping
+	public String listar(Model model, HttpServletRequest request) {
+<span class="fc" id="L31">		model.addAttribute(&quot;duenos&quot;, backendApiClient.listarDuenos(SessionJwt.get(request)));</span>
+<span class="fc" id="L32">		return &quot;duenos&quot;;</span>
+	}
+
+	@GetMapping(&quot;/nuevo&quot;)
+	public String nuevo(Model model) {
+<span class="fc" id="L37">		model.addAttribute(&quot;duenoForm&quot;, new DuenoForm(&quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;));</span>
+<span class="fc" id="L38">		model.addAttribute(&quot;modo&quot;, &quot;crear&quot;);</span>
+<span class="fc" id="L39">		return &quot;dueno-form&quot;;</span>
+	}
+
+	@PostMapping
+	public String crear(
+			@Valid @ModelAttribute(&quot;duenoForm&quot;) DuenoForm form,
+			BindingResult bindingResult,
+			Model model,
+			HttpServletRequest request,
+			RedirectAttributes ra) {
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">		if (bindingResult.hasErrors()) {</span>
+<span class="nc" id="L50">			model.addAttribute(&quot;modo&quot;, &quot;crear&quot;);</span>
+<span class="nc" id="L51">			return &quot;dueno-form&quot;;</span>
+		}
+<span class="fc" id="L53">		backendApiClient.crearDueno(SessionJwt.get(request), form);</span>
+<span class="fc" id="L54">		ra.addFlashAttribute(&quot;mensaje&quot;, &quot;Dueño registrado.&quot;);</span>
+<span class="fc" id="L55">		return &quot;redirect:/duenos&quot;;</span>
+	}
+
+	@GetMapping(&quot;/{id}/editar&quot;)
+	public String editar(@PathVariable Long id, Model model, HttpServletRequest request) {
+<span class="fc" id="L60">		var d = backendApiClient.listarDuenos(SessionJwt.get(request)).stream()</span>
+<span class="fc" id="L61">				.filter(x -&gt; x.id().equals(id))</span>
+<span class="fc" id="L62">				.findFirst()</span>
+<span class="fc" id="L63">				.orElseThrow();</span>
+<span class="fc" id="L64">		model.addAttribute(&quot;duenoForm&quot;, new DuenoForm(d.nombreCompleto(), d.email(), d.telefono(), d.direccion()));</span>
+<span class="fc" id="L65">		model.addAttribute(&quot;duenoId&quot;, id);</span>
+<span class="fc" id="L66">		model.addAttribute(&quot;modo&quot;, &quot;editar&quot;);</span>
+<span class="fc" id="L67">		return &quot;dueno-form&quot;;</span>
+	}
+
+	@PostMapping(&quot;/{id}/actualizar&quot;)
+	public String actualizar(
+			@PathVariable Long id,
+			@Valid @ModelAttribute(&quot;duenoForm&quot;) DuenoForm form,
+			BindingResult bindingResult,
+			Model model,
+			HttpServletRequest request,
+			RedirectAttributes ra) {
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">		if (bindingResult.hasErrors()) {</span>
+<span class="nc" id="L79">			model.addAttribute(&quot;duenoId&quot;, id);</span>
+<span class="nc" id="L80">			model.addAttribute(&quot;modo&quot;, &quot;editar&quot;);</span>
+<span class="nc" id="L81">			return &quot;dueno-form&quot;;</span>
+		}
+<span class="fc" id="L83">		backendApiClient.actualizarDueno(SessionJwt.get(request), id, form);</span>
+<span class="fc" id="L84">		ra.addFlashAttribute(&quot;mensaje&quot;, &quot;Dueño actualizado.&quot;);</span>
+<span class="fc" id="L85">		return &quot;redirect:/duenos&quot;;</span>
+	}
+
+	@PostMapping(&quot;/{id}/eliminar&quot;)
+	public String eliminar(@PathVariable Long id, HttpServletRequest request, RedirectAttributes ra) {
+<span class="fc" id="L90">		backendApiClient.eliminarDueno(SessionJwt.get(request), id);</span>
+<span class="fc" id="L91">		ra.addFlashAttribute(&quot;mensaje&quot;, &quot;Dueño eliminado.&quot;);</span>
+<span class="fc" id="L92">		return &quot;redirect:/duenos&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdopcionGestionWebController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.frontendS8.web</a> &gt; <span class="el_source">AdopcionGestionWebController.java</span></div><h1>AdopcionGestionWebController.java</h1><pre class="source lang-java linenums">package com.duoc.frontendS8.web;
+
+import java.nio.charset.StandardCharsets;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.duoc.frontendS8.dto.MensajeCoordinadorForm;
+import com.duoc.frontendS8.dto.SolicitudAdopcionDetalleDto;
+import com.duoc.frontendS8.dto.SolicitudDatosPatchApiRequest;
+import com.duoc.frontendS8.dto.SolicitudEdicionCoordinadorForm;
+import com.duoc.frontendS8.service.BackendApiClient;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+
+@Controller
+@RequestMapping(&quot;/adopciones/gestion&quot;)
+public class AdopcionGestionWebController {
+
+	private final BackendApiClient backendApiClient;
+
+<span class="fc" id="L35">	public AdopcionGestionWebController(BackendApiClient backendApiClient) {</span>
+<span class="fc" id="L36">		this.backendApiClient = backendApiClient;</span>
+<span class="fc" id="L37">	}</span>
+
+	@GetMapping
+	public String listar(Model model, HttpServletRequest request) {
+		try {
+<span class="fc" id="L42">			model.addAttribute(&quot;solicitudes&quot;, backendApiClient.listarSolicitudesAdopcion(SessionJwt.get(request)));</span>
+<span class="fc" id="L43">		}</span>
+<span class="fc" id="L44">		catch (RestClientException e) {</span>
+<span class="fc" id="L45">			model.addAttribute(&quot;backendError&quot;, &quot;No se pudo cargar el listado de solicitudes.&quot;);</span>
+<span class="fc" id="L46">			model.addAttribute(&quot;solicitudes&quot;, java.util.List.of());</span>
+		}
+<span class="fc" id="L48">		return &quot;adopcion-gestion&quot;;</span>
+	}
+
+	@GetMapping(&quot;/{id}&quot;)
+	public String detalle(@PathVariable Long id, Model model, HttpServletRequest request) {
+		try {
+<span class="fc" id="L54">			SolicitudAdopcionDetalleDto sol = backendApiClient.obtenerSolicitudAdopcion(SessionJwt.get(request), id);</span>
+<span class="fc" id="L55">			model.addAttribute(&quot;solicitud&quot;, sol);</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">			if (!model.containsAttribute(&quot;solicitudEdicionForm&quot;)) {</span>
+<span class="fc" id="L57">				model.addAttribute(&quot;solicitudEdicionForm&quot;, formEdicionDesde(sol));</span>
+			}
+<span class="fc" id="L59">		}</span>
+<span class="fc" id="L60">		catch (RestClientException e) {</span>
+<span class="fc" id="L61">			model.addAttribute(&quot;backendError&quot;, &quot;No se pudo cargar la solicitud.&quot;);</span>
+<span class="fc" id="L62">			return &quot;redirect:/adopciones/gestion&quot;;</span>
+		}
+<span class="fc" id="L64">		model.addAttribute(&quot;mensajeForm&quot;, new MensajeCoordinadorForm());</span>
+<span class="fc" id="L65">		return &quot;adopcion-gestion-detalle&quot;;</span>
+	}
+
+	@PostMapping(&quot;/{id}/mensaje&quot;)
+	public String enviarMensaje(
+			@PathVariable Long id,
+			@Valid @ModelAttribute(&quot;mensajeForm&quot;) MensajeCoordinadorForm form,
+			BindingResult bindingResult,
+			HttpServletRequest request) {
+<span class="fc bfc" id="L74" title="All 2 branches covered.">		if (bindingResult.hasErrors()) {</span>
+<span class="fc" id="L75">			return &quot;redirect:/adopciones/gestion/&quot; + id;</span>
+		}
+<span class="fc" id="L77">		backendApiClient.coordinadorEnviarMensajeAdopcion(SessionJwt.get(request), id, form.getCuerpo());</span>
+<span class="fc" id="L78">		return &quot;redirect:/adopciones/gestion/&quot; + id;</span>
+	}
+
+	@PostMapping(&quot;/{id}/estado&quot;)
+	public String cambiarEstado(
+			@PathVariable Long id,
+			@RequestParam String estado,
+			HttpServletRequest request) {
+<span class="fc" id="L86">		backendApiClient.coordinadorActualizarEstadoSolicitud(SessionJwt.get(request), id, estado);</span>
+<span class="fc" id="L87">		return &quot;redirect:/adopciones/gestion/&quot; + id;</span>
+	}
+
+	@PostMapping(&quot;/{id}/datos&quot;)
+	public String actualizarDatosSolicitud(
+			@PathVariable Long id,
+			@Valid @ModelAttribute(&quot;solicitudEdicionForm&quot;) SolicitudEdicionCoordinadorForm form,
+			BindingResult bindingResult,
+			Model model,
+			HttpServletRequest request,
+			RedirectAttributes redirectAttributes) {
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">		if (bindingResult.hasErrors()) {</span>
+<span class="nc" id="L99">			return prepararDetalleConError(model, request, id, form);</span>
+		}
+<span class="fc" id="L101">		var api = new SolicitudDatosPatchApiRequest(</span>
+<span class="fc" id="L102">				form.getNombreCompleto().trim(),</span>
+<span class="fc" id="L103">				form.getEmail().trim(),</span>
+<span class="fc" id="L104">				blankToNull(form.getTelefono()),</span>
+<span class="fc" id="L105">				blankToNull(form.getDireccion()),</span>
+<span class="fc" id="L106">				blankToNull(form.getCiudad()),</span>
+<span class="fc" id="L107">				form.getTipoVivienda().trim(),</span>
+<span class="fc" id="L108">				form.getPersonasEnHogar(),</span>
+<span class="fc" id="L109">				form.isTieneNinos(),</span>
+<span class="fc" id="L110">				form.isTieneOtrasMascotas(),</span>
+<span class="fc" id="L111">				blankToNull(form.getExperienciaMascotas()),</span>
+<span class="fc" id="L112">				form.getMotivacionAdopcion().trim(),</span>
+<span class="fc" id="L113">				form.getConstanciaSolicitante().trim());</span>
+		try {
+<span class="fc" id="L115">			backendApiClient.coordinadorActualizarDatosSolicitud(SessionJwt.get(request), id, api);</span>
+<span class="fc" id="L116">			redirectAttributes.addFlashAttribute(&quot;mensaje&quot;,</span>
+<span class="fc" id="L117">					&quot;Datos de la solicitud actualizados. El registro quedó en la conversación para la persona que adopta.&quot;);</span>
+<span class="fc" id="L118">			return &quot;redirect:/adopciones/gestion/&quot; + id;</span>
+		}
+<span class="fc" id="L120">		catch (HttpClientErrorException.BadRequest e) {</span>
+<span class="fc" id="L121">			model.addAttribute(&quot;errorApi&quot;, mensajeBadRequestApi(e));</span>
+<span class="fc" id="L122">			return prepararDetalleConError(model, request, id, form);</span>
+		}
+<span class="fc" id="L124">		catch (RestClientException e) {</span>
+<span class="fc" id="L125">			model.addAttribute(&quot;errorApi&quot;, &quot;No se pudo guardar los cambios. Verifique la sesión o que el backend esté en ejecución.&quot;);</span>
+<span class="fc" id="L126">			return prepararDetalleConError(model, request, id, form);</span>
+		}
+	}
+
+	@PostMapping(&quot;/{id}/eliminar&quot;)
+	public String eliminar(
+			@PathVariable Long id,
+			HttpServletRequest request,
+			RedirectAttributes redirectAttributes) {
+		try {
+<span class="fc" id="L136">			backendApiClient.eliminarSolicitudAdopcion(SessionJwt.get(request), id);</span>
+<span class="fc" id="L137">			redirectAttributes.addFlashAttribute(&quot;mensaje&quot;, &quot;La solicitud de adopción fue eliminada.&quot;);</span>
+<span class="fc" id="L138">		}</span>
+<span class="fc" id="L139">		catch (RestClientException e) {</span>
+<span class="fc" id="L140">			redirectAttributes.addFlashAttribute(&quot;backendError&quot;, &quot;No se pudo eliminar la solicitud. Intente de nuevo o verifique la sesión.&quot;);</span>
+		}
+<span class="fc" id="L142">		return &quot;redirect:/adopciones/gestion&quot;;</span>
+	}
+
+	private String prepararDetalleConError(
+			Model model,
+			HttpServletRequest request,
+			Long id,
+			SolicitudEdicionCoordinadorForm form) {
+		try {
+<span class="fc" id="L151">			model.addAttribute(&quot;solicitud&quot;, backendApiClient.obtenerSolicitudAdopcion(SessionJwt.get(request), id));</span>
+<span class="fc" id="L152">		}</span>
+<span class="nc" id="L153">		catch (RestClientException e) {</span>
+<span class="nc" id="L154">			model.addAttribute(&quot;backendError&quot;, &quot;No se pudo recargar la solicitud.&quot;);</span>
+		}
+<span class="fc" id="L156">		model.addAttribute(&quot;solicitudEdicionForm&quot;, form);</span>
+<span class="fc" id="L157">		model.addAttribute(&quot;mensajeForm&quot;, new MensajeCoordinadorForm());</span>
+<span class="fc" id="L158">		return &quot;adopcion-gestion-detalle&quot;;</span>
+	}
+
+	private static SolicitudEdicionCoordinadorForm formEdicionDesde(SolicitudAdopcionDetalleDto s) {
+<span class="fc" id="L162">		var f = new SolicitudEdicionCoordinadorForm();</span>
+<span class="fc" id="L163">		f.setNombreCompleto(s.nombreCompleto());</span>
+<span class="fc" id="L164">		f.setEmail(s.email());</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">		f.setTelefono(s.telefono() != null ? s.telefono() : &quot;&quot;);</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">		f.setDireccion(s.direccion() != null ? s.direccion() : &quot;&quot;);</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">		f.setCiudad(s.ciudad() != null ? s.ciudad() : &quot;&quot;);</span>
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">		f.setTipoVivienda(s.tipoVivienda() != null ? s.tipoVivienda() : &quot;CASA&quot;);</span>
+<span class="fc" id="L169">		f.setPersonasEnHogar(s.personasEnHogar());</span>
+<span class="fc" id="L170">		f.setTieneNinos(Boolean.TRUE.equals(s.tieneNinos()));</span>
+<span class="fc" id="L171">		f.setTieneOtrasMascotas(Boolean.TRUE.equals(s.tieneOtrasMascotas()));</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">		f.setExperienciaMascotas(s.experienciaMascotas() != null ? s.experienciaMascotas() : &quot;&quot;);</span>
+<span class="fc" id="L173">		f.setMotivacionAdopcion(s.motivacionAdopcion());</span>
+<span class="fc" id="L174">		f.setConstanciaSolicitante(&quot;&quot;);</span>
+<span class="fc" id="L175">		return f;</span>
+	}
+
+	private static String mensajeBadRequestApi(HttpClientErrorException.BadRequest e) {
+		try {
+<span class="fc" id="L180">			String raw = e.getResponseBodyAsString(StandardCharsets.UTF_8);</span>
+<span class="pc bpc" id="L181" title="2 of 4 branches missed.">			if (raw != null &amp;&amp; !raw.isBlank()) {</span>
+<span class="fc" id="L182">				JsonNode root = new ObjectMapper().readTree(raw);</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">				if (root.hasNonNull(&quot;message&quot;)) {</span>
+<span class="fc" id="L184">					String m = root.get(&quot;message&quot;).asText();</span>
+<span class="pc bpc" id="L185" title="2 of 4 branches missed.">					if (m != null &amp;&amp; !m.isBlank()) {</span>
+<span class="fc" id="L186">						return m;</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L191">		catch (Exception ignored) {</span>
+			// mensaje genérico abajo
+		}
+<span class="nc" id="L194">		return &quot;Revise los datos enviados; el servidor no aceptó la actualización.&quot;;</span>
+	}
+
+	private static String blankToNull(String s) {
+<span class="pc bpc" id="L198" title="2 of 4 branches missed.">		if (s == null || s.isBlank()) {</span>
+<span class="fc" id="L199">			return null;</span>
+		}
+<span class="nc" id="L201">		return s.trim();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

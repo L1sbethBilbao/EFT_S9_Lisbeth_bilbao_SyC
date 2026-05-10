@@ -1,0 +1,76 @@
+================================================================================
+Paso 5 EFT — Análisis SCA con OWASP Dependency-Check (Maven)
+================================================================================
+
+Objetivo (instrucciones específicas)
+-----------------------------------
+Identificar y evaluar vulnerabilidades conocidas en las dependencias del
+proyecto (Software Composition Analysis) y adjuntar el reporte generado.
+
+Herramienta
+-----------
+OWASP Dependency-Check (plugin dependency-check-maven), ya configurado en:
+  - backendS9/pom.xml
+  - frontendS9/pom.xml
+
+Por defecto el escaneo está desactivado en el ciclo normal del build para no
+ralentizar cada compilación. Actívalo solo cuando necesites evidencia del Paso 5.
+
+--------------------------------------------------------------------------------
+1) (Opcional recomendado) API key del NVD
+--------------------------------------------------------------------------------
+
+Sin clave, la descarga de datos del National Vulnerability Database puede ser
+lenta o recibir HTTP 429. Solicita una clave gratuita en:
+  https://nvd.nist.gov/developers/request-an-api-key
+
+En PowerShell (sesión actual):
+  $env:NVD_API_KEY = "tu_clave_aqui"
+
+--------------------------------------------------------------------------------
+2) Generar reportes (backend y frontend)
+--------------------------------------------------------------------------------
+
+Desde la raíz del repo EFT_S9_Lisbeth_bilbao_SyC:
+
+PowerShell: encierra el -D entre comillas o Maven lo interpreta mal, por ejemplo:
+  mvn dependency-check:check "-Dowasp.dependency-check.skip=false"
+
+Backend:
+  cd backendS9
+  mvn dependency-check:check "-Dowasp.dependency-check.skip=false"
+
+Frontend:
+  cd ..\frontendS9
+  mvn dependency-check:check "-Dowasp.dependency-check.skip=false"
+
+Los informes HTML y JSON quedan en:
+  reportes_dependency_check/backendS9/
+  reportes_dependency_check/frontendS9/
+
+Abre el archivo .html en el navegador para revisar dependencias vulnerables,
+severidades y referencias CVE.
+
+--------------------------------------------------------------------------------
+3) Umbral de fallo del build (CVSS)
+--------------------------------------------------------------------------------
+
+En cada pom.xml, propiedad owasp.dependency-check.fail-cvss (por defecto 7):
+si alguna dependencia supera ese umbral, Maven termina con error tras generar
+el reporte. Ajusta solo si tu docente indica otra política.
+
+Supresiones documentadas (falsos positivos): dependency-check-suppressions.xml
+en cada módulo.
+
+--------------------------------------------------------------------------------
+4) Texto sugerido para el informe PDF
+--------------------------------------------------------------------------------
+
+"Para el Paso 5 se ejecutó OWASP Dependency-Check sobre las dependencias Maven
+del backend y del frontend (SCA). Se generaron reportes en HTML/JSON y se
+revisaron hallazgos asociados a CVE en bibliotecas transitivas. La configuración
+del proyecto fija un umbral CVSS para fallar el build ante vulnerabilidades de
+alta severidad, alineado con la búsqueda de ausencia de riesgos críticos en el
+árbol de dependencias."
+
+================================================================================

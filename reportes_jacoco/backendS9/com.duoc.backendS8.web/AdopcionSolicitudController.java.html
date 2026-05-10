@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdopcionSolicitudController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.duoc.backendS8.web</a> &gt; <span class="el_source">AdopcionSolicitudController.java</span></div><h1>AdopcionSolicitudController.java</h1><pre class="source lang-java linenums">package com.duoc.backendS8.web;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.duoc.backendS8.dto.EstadoSolicitudPatchRequest;
+import com.duoc.backendS8.dto.MensajeCoordinadorRequest;
+import com.duoc.backendS8.dto.MensajeSeguimientoRequest;
+import com.duoc.backendS8.dto.SolicitudAdopcionCreateRequest;
+import com.duoc.backendS8.dto.SolicitudAdopcionCreatedResponse;
+import com.duoc.backendS8.dto.SolicitudAdopcionDatosPatchRequest;
+import com.duoc.backendS8.dto.SolicitudAdopcionDetalleResponse;
+import com.duoc.backendS8.dto.SolicitudAdopcionListItemResponse;
+import com.duoc.backendS8.dto.SolicitudAdopcionSeguimientoPublicoResponse;
+import com.duoc.backendS8.service.SolicitudAdopcionService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping(&quot;/api/adopciones&quot;)
+public class AdopcionSolicitudController {
+
+	private final SolicitudAdopcionService solicitudAdopcionService;
+
+<span class="fc" id="L35">	public AdopcionSolicitudController(SolicitudAdopcionService solicitudAdopcionService) {</span>
+<span class="fc" id="L36">		this.solicitudAdopcionService = solicitudAdopcionService;</span>
+<span class="fc" id="L37">	}</span>
+
+	@PostMapping(&quot;/solicitudes&quot;)
+	public ResponseEntity&lt;SolicitudAdopcionCreatedResponse&gt; crear(@Valid @RequestBody SolicitudAdopcionCreateRequest body) {
+<span class="nc" id="L41">		return ResponseEntity.status(201).body(solicitudAdopcionService.crear(body));</span>
+	}
+
+	@PostMapping(&quot;/seguimiento/mensajes&quot;)
+	public ResponseEntity&lt;Void&gt; mensajeSolicitante(@Valid @RequestBody MensajeSeguimientoRequest body) {
+<span class="nc" id="L46">		solicitudAdopcionService.agregarMensajeSolicitante(body);</span>
+<span class="nc" id="L47">		return ResponseEntity.noContent().build();</span>
+	}
+
+	@GetMapping(&quot;/seguimiento/consulta&quot;)
+	public SolicitudAdopcionSeguimientoPublicoResponse consultaPublica(@RequestParam String codigo) {
+<span class="nc" id="L52">		return solicitudAdopcionService.obtenerVistaPublicaPorCodigo(codigo);</span>
+	}
+
+	@GetMapping(&quot;/solicitudes&quot;)
+	public List&lt;SolicitudAdopcionListItemResponse&gt; listarCoordinador() {
+<span class="nc" id="L57">		return solicitudAdopcionService.listarParaCoordinador();</span>
+	}
+
+	@GetMapping(&quot;/solicitudes/{id}&quot;)
+	public SolicitudAdopcionDetalleResponse detalleCoordinador(@PathVariable Long id) {
+<span class="nc" id="L62">		return solicitudAdopcionService.obtenerParaCoordinador(id);</span>
+	}
+
+	@PostMapping(&quot;/solicitudes/{id}/mensajes&quot;)
+	public ResponseEntity&lt;Void&gt; mensajeCoordinador(
+			@PathVariable Long id,
+			@Valid @RequestBody MensajeCoordinadorRequest body) {
+<span class="nc" id="L69">		solicitudAdopcionService.agregarMensajeCoordinador(id, body);</span>
+<span class="nc" id="L70">		return ResponseEntity.noContent().build();</span>
+	}
+
+	@PatchMapping(&quot;/solicitudes/{id}/estado&quot;)
+	public ResponseEntity&lt;Void&gt; estado(
+			@PathVariable Long id,
+			@Valid @RequestBody EstadoSolicitudPatchRequest body) {
+<span class="nc" id="L77">		solicitudAdopcionService.actualizarEstado(id, body);</span>
+<span class="nc" id="L78">		return ResponseEntity.noContent().build();</span>
+	}
+
+	@PatchMapping(&quot;/solicitudes/{id}/datos&quot;)
+	public ResponseEntity&lt;Void&gt; actualizarDatos(
+			@PathVariable Long id,
+			@Valid @RequestBody SolicitudAdopcionDatosPatchRequest body) {
+<span class="nc" id="L85">		solicitudAdopcionService.actualizarDatosCoordinador(id, body);</span>
+<span class="nc" id="L86">		return ResponseEntity.noContent().build();</span>
+	}
+
+	@DeleteMapping(&quot;/solicitudes/{id}&quot;)
+	public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+<span class="nc" id="L91">		solicitudAdopcionService.eliminar(id);</span>
+<span class="nc" id="L92">		return ResponseEntity.noContent().build();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
